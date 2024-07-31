@@ -1,4 +1,4 @@
-create table user if not exists (
+create table if not exists user (
     id integer primary key autoincrement,
     username text not null unique,
     password_hash text not null,
@@ -7,7 +7,7 @@ create table user if not exists (
     last_login datetime
 );
 
-create table video if not exists (
+create table if not exists video (
     id integer primary key autoincrement,
     youtube_id text not null unique,
     title text not null,
@@ -19,7 +19,7 @@ create table video if not exists (
     view_count integer not null
 );
 
-create table cart if not exists (
+create table if not exists cart (
     id integer primary key autoincrement,
     user_id integer not null unique,
     created_at datetime default current_timestamp,
@@ -27,7 +27,7 @@ create table cart if not exists (
     foreign key (user_id) references user(id)
 );
 
-create table cart_item if not exists (
+create table if not exists cart_item (
     id integer primary key autoincrement,
     cart_id integer not null,
     video_id integer not null,
@@ -37,7 +37,7 @@ create table cart_item if not exists (
     unique(cart_id, video_id)
 );
 
-create table search if not exists (
+create table if not exists search (
     id integer primary key autoincrement,
     query text not null,
     user_id integer not null,
@@ -45,7 +45,7 @@ create table search if not exists (
     foreign key (user_id) references user(id)
 );
 
-create table search_result if not exists (
+create table if not exists search_result (
     id integer primary key autoincrement,
     search_id integer not null,
     video_id integer not null,

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	_ "github.com/mattn/go-sqlite3"
 	"maestro/utils"
 	"os"
 	"path"
@@ -58,10 +59,16 @@ func main() {
 	var db *sql.DB
 
 	utils.WithTimer("connecting to database", func() {
-		db, err = sql.Open("", "./db/maestro.db")
+		db, err = sql.Open("sqlite3", "./db/maestro.db")
 		utils.HandleError(err, "Failed to connect to database")
 	})
 
 	defer db.Close()
 
+	utils.WithTimer("executing migration script", func() {
+		_, err = db.Exec(script)
+		// TODO: This might leave the DB in an intermediate state, so it's
+		// important to make both migration directions idempotent
+		utils.HandleError(err, "Failed to execute migration")
+	})
 }
