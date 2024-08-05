@@ -2,6 +2,16 @@
 
 This is a collection of services that compose the backend of `maestro`
 
+## Project Structure
+
+I'm new to Go, so documenting this for myself and others serves as a learning tool for me.
+
+| Directory | Purpose |
+| --------- | ------- |
+| `cmd`     | Contains packages with entry points for invokation (eg. `cmd/core/main.go` contains the web server, `cmd/migrate/main.go` contains the DB migration script) |
+| `db`      | Contains the SQLite database and the SQL migration scripts |
+| `internal` | Contains utilities used throughout the project. Importable as `maestro/internal` |
+
 ## Database
 
 `sqlite3` is used. For local development, run the following to prop up the database
@@ -21,7 +31,7 @@ To execute a migration, run the following
 
 ```
 # Usage:
-# go run db/migrate.go [migration_name] [up/down]
+# go run cmd/migrate/main.go [migration_name] [up/down]
 # Example usage:
 $ go run db/migrate.go create_user_table up
 ```
