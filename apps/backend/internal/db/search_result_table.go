@@ -10,13 +10,18 @@ import (
 func CreateSearchResults(db *sql.DB, searchId int64, videos []xyoutube.Video) error {
 	var b strings.Builder
 	_, err = b.WriteString(
-		"insert into search_result (search_id, video_youtube_id) values ",
+		"insert into search_result (search_id, video_youtube_id) values",
 	)
 
-	for _, video := range videos {
+	for index, video := range videos {
 		s := fmt.Sprintf(
-			`(%d, "%s")`, searchId, video.Id,
+			`(%d, "%s"),`, searchId, video.Id,
 		)
+
+		if index == len(videos)-1 {
+			s = strings.TrimSuffix(s, ",")
+		}
+
 		b.WriteString(s)
 	}
 

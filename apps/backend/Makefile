@@ -1,2 +1,2 @@
 dev-server:
-	go run cmd/core/main.go
+	go run ./cmd/core

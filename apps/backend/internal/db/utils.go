@@ -2,7 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"strconv"
 )
 
 // Expects a raw SQL count query, writing the first column of the first row

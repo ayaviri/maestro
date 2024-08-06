@@ -32,7 +32,7 @@ type UserLoginResponseBody struct {
 // |_| |_/_/   \_\_| \_|____/|_____|_____|_| \_\____/
 //
 
-func loginResourceHandler(writer http.ResponseWriter, request *http.Request) {
+func LoginResourceHandler(writer http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
 		http.Error(writer, "Method not allowed", http.StatusMethodNotAllowed)
 		return

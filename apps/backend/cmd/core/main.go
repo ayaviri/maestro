@@ -54,18 +54,26 @@ func init() {
 
 func initialiseServer() {
 	authMiddlewareFactory := xhttp.BearerTokenAuthMiddlewareFactory{DB: db}
+	loggingHandler := xhttp.NewLoggingHandler(os.Stdout)
 
-	http.HandleFunc("/health", healthResourceHandler)
+	http.Handle("/health", loggingHandler(http.HandlerFunc(HealthResourceHandler)))
 	http.Handle(
 		"/videos",
-		authMiddlewareFactory.New(http.HandlerFunc(videosResourceHandler)),
+		loggingHandler(
+			authMiddlewareFactory.New(http.HandlerFunc(VideosResourceHandler)),
+		),
 	)
 	http.Handle(
 		"/cart",
-		authMiddlewareFactory.New(http.HandlerFunc(cartResourceHandler)),
+		loggingHandler(
+			authMiddlewareFactory.New(http.HandlerFunc(CartResourceHandler)),
+		),
 	)
-	http.HandleFunc("/register", registrationResourceHandler)
-	http.HandleFunc("/login", loginResourceHandler)
+	http.Handle(
+		"/register",
+		loggingHandler(http.HandlerFunc(RegistrationResourceHandler)),
+	)
+	http.Handle("/login", loggingHandler(http.HandlerFunc(LoginResourceHandler)))
 	// TODO: Need to introduce TLS here
 	http.ListenAndServe(":8000", nil)
 }

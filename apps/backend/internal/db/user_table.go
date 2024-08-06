@@ -134,7 +134,7 @@ func AuthenticateAndGenerateToken(
 		return "", err
 	}
 
-	return uuid.NewString(), nil
+	return bearerToken, nil
 }
 
 func UpdateBearerToken(db *sql.DB, username, bearerToken string) error {

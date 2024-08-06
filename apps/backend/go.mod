@@ -17,6 +17,7 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.13.0 // indirect
+	github.com/gorilla/handlers v1.5.2 // indirect
 	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
 	go.opencensus.io v0.24.0 // indirect

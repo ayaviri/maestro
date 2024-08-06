@@ -8,9 +8,10 @@ import (
 	xhttp "maestro/internal/http"
 	xyoutube "maestro/internal/youtube"
 	"net/http"
+	"net/url"
 )
 
-func videosResourceHandler(writer http.ResponseWriter, request *http.Request) {
+func VideosResourceHandler(writer http.ResponseWriter, request *http.Request) {
 	// TODO: Update this to direct various kinds of requests for the same resource
 	// to the appropriate handler
 	if request.Method != http.MethodGet {
@@ -26,15 +27,16 @@ func videosResourceHandler(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		http.Error(
 			writer,
-			"Could not get user from bearer token",
+			fmt.Sprintf("Could not get user from bearer token: %v\n", err.Error()),
 			http.StatusInternalServerError,
 		)
+		return
 	}
 
 	var queryParameters url.Values = request.URL.Query()
 	var videoSearchQuery string = queryParameters.Get("q")
 	// TODO: Introduce pagination parameters
-	var videos []xyoutube.Video
+	videos := make([]xyoutube.Video, 0)
 
 	internal.WithTimer("fetching videos from Youtube Data API", func() {
 		videos, err = xyoutube.SearchVideosByQuery(
@@ -51,10 +53,16 @@ func videosResourceHandler(writer http.ResponseWriter, request *http.Request) {
 			),
 			http.StatusInternalServerError,
 		)
+		return
 	}
 
 	internal.WithTimer("logging results to database", func() {
 		err = xdb.CreateVideos(db, videos)
+
+		if err != nil {
+			return
+		}
+
 		var searchId int64
 		searchId, err = xdb.CreateSearch(db, videoSearchQuery, user.Id)
 
@@ -74,6 +82,7 @@ func videosResourceHandler(writer http.ResponseWriter, request *http.Request) {
 			),
 			http.StatusInternalServerError,
 		)
+		return
 	}
 
 	var videosJson []byte
@@ -83,10 +92,11 @@ func videosResourceHandler(writer http.ResponseWriter, request *http.Request) {
 		http.Error(
 			writer,
 			fmt.Sprintf(
-				"Could not serialise videos into JSON: %v", err.Error(),
+				"Could not serialise videos into JSON: %v\n", err.Error(),
 			),
 			http.StatusInternalServerError,
 		)
+		return
 	}
 
 	writer.Write(videosJson)

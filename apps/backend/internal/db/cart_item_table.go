@@ -8,7 +8,7 @@ import (
 
 func AddItemToCart(db *sql.DB, cartId int64, videoId string) error {
 	statement := fmt.Sprintf(
-		`insert into cart_items (cart_id, video_youtube_id) values(%d, "%s");`,
+		`insert into cart_item (cart_id, video_youtube_id) values(%d, "%s");`,
 		cartId, videoId,
 	)
 	_, err = db.Exec(statement)
@@ -18,7 +18,7 @@ func AddItemToCart(db *sql.DB, cartId int64, videoId string) error {
 
 func RemoveItemFromCart(db *sql.DB, cartId int64, videoId string) error {
 	statement := fmt.Sprintf(
-		`delete from cart_items where cart_id=%d and video_youtube_id="%s"`,
+		`delete from cart_item where cart_id=%d and video_youtube_id="%s"`,
 		cartId, videoId,
 	)
 	_, err = db.Exec(statement)
@@ -29,18 +29,19 @@ func RemoveItemFromCart(db *sql.DB, cartId int64, videoId string) error {
 func GetItemsFromCart(db *sql.DB, cartId int64) ([]xyoutube.Video, error) {
 	query := fmt.Sprintf(
 		`select video.* from video join cart_item on video.youtube_id = 
-        cart_item.video_youtube_id where cart_item.cart_id = %d`,
+        cart_item.video_youtube_id where cart_item.cart_id = %d;`,
 		cartId,
 	)
+	fmt.Println(query)
 	var rows *sql.Rows
 	rows, err = db.Query(query)
-	var cartItems []xyoutube.Video
+	cartItems := make([]xyoutube.Video, 0)
 
 	if err != nil {
 		return cartItems, nil
 	}
 
-	for !rows.Next() {
+	for rows.Next() {
 		var cartItem xyoutube.Video
 		err = rows.Scan(
 			&cartItem.Id,

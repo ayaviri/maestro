@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"maestro/internal"
 	xdb "maestro/internal/db"
 	xhttp "maestro/internal/http"
@@ -17,7 +18,7 @@ import (
 // |_| \_\\___/ \___/  |_| |_____|_| \_\
 //
 
-func cartResourceHandler(writer http.ResponseWriter, request *http.Request) {
+func CartResourceHandler(writer http.ResponseWriter, request *http.Request) {
 	var user xdb.User
 
 	internal.WithTimer("getting user from auth bearer token", func() {
@@ -29,7 +30,7 @@ func cartResourceHandler(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		http.Error(
 			writer,
-			"Could not get user from bearer token",
+			fmt.Sprintf("Could not get user from bearer token: %v\n", err.Error()),
 			http.StatusInternalServerError,
 		)
 		return
@@ -44,7 +45,7 @@ func cartResourceHandler(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		http.Error(
 			writer,
-			"Could not get/create cart for user",
+			fmt.Sprintf("Could not get/create cart for user: %v\n", err.Error()),
 			http.StatusInternalServerError,
 		)
 		return
@@ -107,7 +108,7 @@ func removeFromCartHandler(
 	if err != nil {
 		http.Error(
 			writer,
-			"Could not remove item from cart",
+			fmt.Sprintf("Could not remove item from cart: %v\n", err.Error()),
 			http.StatusInternalServerError,
 		)
 		return
@@ -143,7 +144,9 @@ func addToCartHandler(
 	if err != nil {
 		http.Error(
 			writer,
-			"Could not add item to cart",
+			fmt.Sprintf(
+				"Could not add item to cart: %v\n", err.Error(),
+			),
 			http.StatusInternalServerError,
 		)
 		return
@@ -156,6 +159,8 @@ func getCartHandler(
 	user xdb.User,
 	cartId int64,
 ) {
+	// No need to initialise here, it gets initialised to an empty
+	// array in GetItemsFromCart
 	var cartItems []xyoutube.Video
 
 	internal.WithTimer("getting cart items", func() {
@@ -165,7 +170,7 @@ func getCartHandler(
 	if err != nil {
 		http.Error(
 			writer,
-			"Could not get items from cart",
+			fmt.Sprintf("Could not get items from cart: %v\n", err.Error()),
 			http.StatusInternalServerError,
 		)
 		return
@@ -181,7 +186,7 @@ func getCartHandler(
 	if err != nil {
 		http.Error(
 			writer,
-			"Could not marshal cart items to JSON",
+			fmt.Sprintf("Could not marshal cart items to JSON: %v\n", err.Error()),
 			http.StatusInternalServerError,
 		)
 		return
