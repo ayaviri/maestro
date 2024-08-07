@@ -44,7 +44,7 @@ func (f BearerTokenAuthMiddlewareFactory) New(next http.Handler) http.Handler {
 		if !isValidToken {
 			http.Error(
 				w,
-				fmt.Sprintf("Invalid token: %v\n", err.Error()),
+				"Invalid token",
 				http.StatusUnauthorized,
 			)
 			return

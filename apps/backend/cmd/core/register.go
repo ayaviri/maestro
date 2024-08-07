@@ -63,8 +63,8 @@ func RegistrationResourceHandler(writer http.ResponseWriter, request *http.Reque
 			return
 		}
 
-		var userId int64
-		userId, err = xdb.CreateUser(
+		// var userId int64
+		_, err = xdb.CreateUser(
 			db,
 			requestBody.Username,
 			requestBody.Password,
@@ -75,7 +75,7 @@ func RegistrationResourceHandler(writer http.ResponseWriter, request *http.Reque
 			return
 		}
 
-		err = xdb.CreateCart(db, userId)
+		// err = xdb.CreateCart(db, userId)
 	})
 
 	if err != nil {

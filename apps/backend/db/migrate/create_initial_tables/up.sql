@@ -24,22 +24,22 @@ create table if not exists video (
 
 create unique index if not exists video_youtube_id_index on video(youtube_id);
 
-create table if not exists cart (
-    id integer primary key autoincrement,
-    user_id integer not null unique,
-    created_at datetime default current_timestamp,
-    updated_at datetime default current_timestamp,
-    foreign key (user_id) references user(id)
-);
+-- create table if not exists cart (
+--     id integer primary key autoincrement,
+--     user_id integer not null unique,
+--     created_at datetime default current_timestamp,
+--     updated_at datetime default current_timestamp,
+--     foreign key (user_id) references user(id)
+-- );
 
 create table if not exists cart_item (
     id integer primary key autoincrement,
-    cart_id integer not null,
+    user_id integer not null,
     video_youtube_id integer not null,
     added_at datetime default current_timestamp,
-    foreign key (cart_id) references cart(id),
+    foreign key (user_id) references user(id),
     foreign key (video_youtube_id) references video(youtube_id),
-    unique(cart_id, video_youtube_id)
+    unique(user_id, video_youtube_id)
 );
 
 -- TODO: Add index on cart ID

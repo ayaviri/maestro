@@ -6,31 +6,35 @@ import (
 	xyoutube "maestro/internal/youtube"
 )
 
-func AddItemToCart(db *sql.DB, cartId int64, videoId string) error {
+func AddItemToCart(
+	db *sql.DB,
+	user User,
+	videoId string,
+) error {
 	statement := fmt.Sprintf(
-		`insert into cart_item (cart_id, video_youtube_id) values(%d, "%s");`,
-		cartId, videoId,
+		`insert into cart_item (user_id, video_youtube_id) values(%d, "%s");`,
+		user.Id, videoId,
 	)
 	_, err = db.Exec(statement)
 
 	return err
 }
 
-func RemoveItemFromCart(db *sql.DB, cartId int64, videoId string) error {
+func RemoveItemFromCart(db *sql.DB, user User, videoId string) error {
 	statement := fmt.Sprintf(
-		`delete from cart_item where cart_id=%d and video_youtube_id="%s"`,
-		cartId, videoId,
+		`delete from cart_item where user_id=%d and video_youtube_id="%s"`,
+		user.Id, videoId,
 	)
 	_, err = db.Exec(statement)
 
 	return err
 }
 
-func GetItemsFromCart(db *sql.DB, cartId int64) ([]xyoutube.Video, error) {
+func GetItemsFromCart(db *sql.DB, user User) ([]xyoutube.Video, error) {
 	query := fmt.Sprintf(
 		`select video.* from video join cart_item on video.youtube_id = 
-        cart_item.video_youtube_id where cart_item.cart_id = %d;`,
-		cartId,
+        cart_item.video_youtube_id where cart_item.user_id = %d;`,
+		user.Id,
 	)
 	fmt.Println(query)
 	var rows *sql.Rows

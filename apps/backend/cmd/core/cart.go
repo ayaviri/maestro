@@ -36,11 +36,11 @@ func CartResourceHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	var cartId int64
+	// var cartId int64
 
-	internal.WithTimer("getting user cart", func() {
-		cartId, err = xdb.GetUserCartId(db, user.Id)
-	})
+	// internal.WithTimer("getting user cart", func() {
+	// 	cartId, err = xdb.GetUserCartId(db, user.Id)
+	// })
 
 	if err != nil {
 		http.Error(
@@ -53,11 +53,11 @@ func CartResourceHandler(writer http.ResponseWriter, request *http.Request) {
 
 	switch request.Method {
 	case http.MethodGet:
-		getCartHandler(writer, request, user, cartId)
+		getCartHandler(writer, request, user)
 	case http.MethodPost:
-		addToCartHandler(writer, request, user, cartId)
+		addToCartHandler(writer, request, user)
 	case http.MethodDelete:
-		removeFromCartHandler(writer, request, user, cartId)
+		removeFromCartHandler(writer, request, user)
 	}
 }
 
@@ -83,7 +83,6 @@ func removeFromCartHandler(
 	writer http.ResponseWriter,
 	request *http.Request,
 	user xdb.User,
-	cartId int64,
 ) {
 	var videoId string
 
@@ -102,7 +101,7 @@ func removeFromCartHandler(
 	}
 
 	internal.WithTimer("removing video from cart", func() {
-		err = xdb.RemoveItemFromCart(db, cartId, videoId)
+		err = xdb.RemoveItemFromCart(db, user, videoId)
 	})
 
 	if err != nil {
@@ -119,7 +118,6 @@ func addToCartHandler(
 	writer http.ResponseWriter,
 	request *http.Request,
 	user xdb.User,
-	cartId int64,
 ) {
 	var videoId string
 
@@ -138,7 +136,7 @@ func addToCartHandler(
 	}
 
 	internal.WithTimer("adding video to cart", func() {
-		err = xdb.AddItemToCart(db, cartId, videoId)
+		err = xdb.AddItemToCart(db, user, videoId)
 	})
 
 	if err != nil {
@@ -157,14 +155,13 @@ func getCartHandler(
 	writer http.ResponseWriter,
 	request *http.Request,
 	user xdb.User,
-	cartId int64,
 ) {
 	// No need to initialise here, it gets initialised to an empty
 	// array in GetItemsFromCart
 	var cartItems []xyoutube.Video
 
 	internal.WithTimer("getting cart items", func() {
-		cartItems, err = xdb.GetItemsFromCart(db, cartId)
+		cartItems, err = xdb.GetItemsFromCart(db, user)
 	})
 
 	if err != nil {

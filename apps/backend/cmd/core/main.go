@@ -74,6 +74,12 @@ func initialiseServer() {
 		loggingHandler(http.HandlerFunc(RegistrationResourceHandler)),
 	)
 	http.Handle("/login", loggingHandler(http.HandlerFunc(LoginResourceHandler)))
+	http.Handle(
+		"/checkout",
+		loggingHandler(
+			authMiddlewareFactory.New(http.HandlerFunc(CheckoutResourceHandler)),
+		),
+	)
 	// TODO: Need to introduce TLS here
 	http.ListenAndServe(":8000", nil)
 }
