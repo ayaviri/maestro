@@ -36,7 +36,6 @@ func GetItemsFromCart(db *sql.DB, user User) ([]xyoutube.Video, error) {
         cart_item.video_youtube_id where cart_item.user_id = %d;`,
 		user.Id,
 	)
-	fmt.Println(query)
 	var rows *sql.Rows
 	rows, err = db.Query(query)
 	cartItems := make([]xyoutube.Video, 0)

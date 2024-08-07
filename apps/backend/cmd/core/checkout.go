@@ -6,6 +6,7 @@ import (
 	xdb "maestro/internal/db"
 	xhttp "maestro/internal/http"
 	xyoutube "maestro/internal/youtube"
+	xytdlp "maestro/internal/ytdlp"
 	"net/http"
 )
 
@@ -39,19 +40,29 @@ func CheckoutResourceHandler(writer http.ResponseWriter, request *http.Request) 
 	})
 
 	if err != nil {
-		// TODO: Implement error message
-		http.Error(writer, "foo", http.StatusInternalServerError)
+		http.Error(
+			writer,
+			fmt.Sprintf("Could not get items from cart: %v\n", err.Error()),
+			http.StatusInternalServerError,
+		)
 		return
 	}
 
 	if len(videos) == 0 {
-		// TODO: Implement error message
-		http.Error(writer, "bar", http.StatusInternalServerError)
+		http.Error(writer, "Cart is empty", http.StatusInternalServerError)
 		return
 	}
 
 	internal.WithTimer("downloading items from cart using yt-dlp", func() {
+		err = xytdlp.DownloadVideos(videos)
 	})
 
-	// TODO: Constructing response
+	if err != nil {
+		http.Error(
+			writer,
+			fmt.Sprintf("Could not download videos using yt-dlp: %v\n", err.Error()),
+			http.StatusInternalServerError,
+		)
+		return
+	}
 }
