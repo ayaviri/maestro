@@ -5,12 +5,12 @@ import (
 	"database/sql"
 	"maestro/internal"
 	xamqp "maestro/internal/amqp"
+	xdb "maestro/internal/db"
 	xhttp "maestro/internal/http"
 	"net/http"
 	"os"
 	"sync"
 
-	_ "github.com/mattn/go-sqlite3"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"google.golang.org/api/option"
 	"google.golang.org/api/youtube/v3"
@@ -37,12 +37,9 @@ func init() {
 	}()
 
 	go func() {
-		internal.WithTimer("initialising DB object", func() {
+		internal.WithTimer("initialising long-lived database connection", func() {
 			defer wg.Done()
-			db, err = sql.Open("sqlite3", "./db/maestro.db")
-			internal.HandleError(err, "Failed to connect to database")
-			err = db.Ping()
-			internal.HandleError(err, "Could not ping database")
+			xdb.EstablishConnection(&db)
 		})
 	}()
 

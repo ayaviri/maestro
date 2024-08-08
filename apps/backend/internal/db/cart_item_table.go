@@ -8,33 +8,33 @@ import (
 
 func AddItemToCart(
 	db *sql.DB,
-	user User,
+	userId int64,
 	videoId string,
 ) error {
 	statement := fmt.Sprintf(
 		`insert into cart_item (user_id, video_youtube_id) values(%d, "%s");`,
-		user.Id, videoId,
+		userId, videoId,
 	)
 	_, err = db.Exec(statement)
 
 	return err
 }
 
-func RemoveItemFromCart(db *sql.DB, user User, videoId string) error {
+func RemoveItemFromCart(db *sql.DB, userId int64, videoId string) error {
 	statement := fmt.Sprintf(
 		`delete from cart_item where user_id=%d and video_youtube_id="%s"`,
-		user.Id, videoId,
+		userId, videoId,
 	)
 	_, err = db.Exec(statement)
 
 	return err
 }
 
-func GetItemsFromCart(db *sql.DB, user User) ([]xyoutube.Video, error) {
+func GetItemsFromCart(db *sql.DB, userId int64) ([]xyoutube.Video, error) {
 	query := fmt.Sprintf(
 		`select video.* from video join cart_item on video.youtube_id = 
         cart_item.video_youtube_id where cart_item.user_id = %d;`,
-		user.Id,
+		userId,
 	)
 	var rows *sql.Rows
 	rows, err = db.Query(query)

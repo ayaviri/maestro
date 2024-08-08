@@ -101,7 +101,7 @@ func removeFromCartHandler(
 	}
 
 	internal.WithTimer("removing video from cart", func() {
-		err = xdb.RemoveItemFromCart(db, user, videoId)
+		err = xdb.RemoveItemFromCart(db, user.Id, videoId)
 	})
 
 	if err != nil {
@@ -136,7 +136,7 @@ func addToCartHandler(
 	}
 
 	internal.WithTimer("adding video to cart", func() {
-		err = xdb.AddItemToCart(db, user, videoId)
+		err = xdb.AddItemToCart(db, user.Id, videoId)
 	})
 
 	if err != nil {
@@ -161,7 +161,7 @@ func getCartHandler(
 	var cartItems []xyoutube.Video
 
 	internal.WithTimer("getting cart items", func() {
-		cartItems, err = xdb.GetItemsFromCart(db, user)
+		cartItems, err = xdb.GetItemsFromCart(db, user.Id)
 	})
 
 	if err != nil {

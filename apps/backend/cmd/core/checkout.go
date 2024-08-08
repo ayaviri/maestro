@@ -1,15 +1,30 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	amqp "github.com/rabbitmq/amqp091-go"
 	"maestro/internal"
 	xdb "maestro/internal/db"
 	xhttp "maestro/internal/http"
+	xworker "maestro/internal/worker"
+
+	amqp "github.com/rabbitmq/amqp091-go"
+
 	// xyoutube "maestro/internal/youtube"
 	// xytdlp "maestro/internal/ytdlp"
 	"net/http"
 )
+
+//  ____   ____ _   _ _____ __  __    _    ____
+// / ___| / ___| | | | ____|  \/  |  / \  / ___|
+// \___ \| |   | |_| |  _| | |\/| | / _ \ \___ \
+//  ___) | |___|  _  | |___| |  | |/ ___ \ ___) |
+// |____/ \____|_| |_|_____|_|  |_/_/   \_\____/
+//
+
+type CheckoutResponseBody struct {
+	JobId int64 `json:"job_id"`
+}
 
 func CheckoutResourceHandler(writer http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
@@ -49,16 +64,43 @@ message broker: %v\n`,
 		)
 	}
 
-	err = channel.Publish(
-		"",
-		checkoutMessageQueue.Name,
-		false,
-		false,
-		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        []byte(fmt.Sprintf("hello world from %s", user.Username)),
-		},
-	)
+	var jobId int64
+
+	internal.WithTimer("creating job ID and writing it to the database", func() {
+		jobId, err = xdb.CreateNewJob(db)
+	})
+
+	if err != nil {
+		http.Error(
+			writer,
+			fmt.Sprintf("Could not create job in database: %v\n", err.Error()),
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	internal.WithTimer("posting job message for worker", func() {
+		var messageBody []byte
+		messageBody, err = json.Marshal(
+			xworker.DownloadCartMessageBody{UserId: user.Id, JobId: jobId},
+		)
+
+		if err != nil {
+			return
+		}
+
+		err = channel.Publish(
+			"",
+			checkoutMessageQueue.Name,
+			false,
+			false,
+			amqp.Publishing{
+				DeliveryMode: amqp.Persistent,
+				ContentType:  "text/plain",
+				Body:         messageBody,
+			},
+		)
+	})
 
 	if err != nil {
 		http.Error(
@@ -69,38 +111,20 @@ message broker: %v\n`,
 			),
 			http.StatusInternalServerError,
 		)
+		return
 	}
 
-	// var videos []xyoutube.Video
+	var responseBody []byte
+	responseBody, err = json.Marshal(CheckoutResponseBody{JobId: jobId})
 
-	// internal.WithTimer("getting cart contents", func() {
-	// 	videos, err = xdb.GetItemsFromCart(db, user)
-	// })
+	if err != nil {
+		http.Error(
+			writer,
+			fmt.Sprintf("Could not marshal response into JSON: %v\n", err.Error()),
+			http.StatusInternalServerError,
+		)
+		return
+	}
 
-	// if err != nil {
-	// 	http.Error(
-	// 		writer,
-	// 		fmt.Sprintf("Could not get items from cart: %v\n", err.Error()),
-	// 		http.StatusInternalServerError,
-	// 	)
-	// 	return
-	// }
-
-	// if len(videos) == 0 {
-	// 	http.Error(writer, "Cart is empty", http.StatusInternalServerError)
-	// 	return
-	// }
-
-	// internal.WithTimer("downloading items from cart using yt-dlp", func() {
-	// 	err = xytdlp.DownloadVideos(videos)
-	// })
-
-	// if err != nil {
-	// 	http.Error(
-	// 		writer,
-	// 		fmt.Sprintf("Could not download videos using yt-dlp: %v\n", err.Error()),
-	// 		http.StatusInternalServerError,
-	// 	)
-	// 	return
-	// }
+	writer.Write(responseBody)
 }

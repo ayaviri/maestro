@@ -40,6 +40,12 @@ func readSqlScript() (string, error) {
 		),
 	)
 
+	if err != nil {
+		return "", errors.New(
+			fmt.Sprintf("Could not read contents of script: %v\n", err.Error()),
+		)
+	}
+
 	return string(scriptContents), nil
 }
 
