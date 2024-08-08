@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"maestro/internal"
 	xdb "maestro/internal/db"
 	xhttp "maestro/internal/http"
-	xyoutube "maestro/internal/youtube"
-	xytdlp "maestro/internal/ytdlp"
+	// xyoutube "maestro/internal/youtube"
+	// xytdlp "maestro/internal/ytdlp"
 	"net/http"
 )
 
@@ -33,36 +34,73 @@ func CheckoutResourceHandler(writer http.ResponseWriter, request *http.Request) 
 		return
 	}
 
-	var videos []xyoutube.Video
-
-	internal.WithTimer("getting cart contents", func() {
-		videos, err = xdb.GetItemsFromCart(db, user)
-	})
+	var channel *amqp.Channel
+	channel, err = messageQueueConnection.Channel()
 
 	if err != nil {
 		http.Error(
 			writer,
-			fmt.Sprintf("Could not get items from cart: %v\n", err.Error()),
+			fmt.Sprintf(
+				`Could not construct channel of communication with Rabbit 
+message broker: %v\n`,
+				err.Error(),
+			),
 			http.StatusInternalServerError,
 		)
-		return
 	}
 
-	if len(videos) == 0 {
-		http.Error(writer, "Cart is empty", http.StatusInternalServerError)
-		return
-	}
-
-	internal.WithTimer("downloading items from cart using yt-dlp", func() {
-		err = xytdlp.DownloadVideos(videos)
-	})
+	err = channel.Publish(
+		"",
+		checkoutMessageQueue.Name,
+		false,
+		false,
+		amqp.Publishing{
+			ContentType: "text/plain",
+			Body:        []byte(fmt.Sprintf("hello world from %s", user.Username)),
+		},
+	)
 
 	if err != nil {
 		http.Error(
 			writer,
-			fmt.Sprintf("Could not download videos using yt-dlp: %v\n", err.Error()),
+			fmt.Sprintf(
+				"Could not publish message to checkout message queue: %v\n",
+				err.Error(),
+			),
 			http.StatusInternalServerError,
 		)
-		return
 	}
+
+	// var videos []xyoutube.Video
+
+	// internal.WithTimer("getting cart contents", func() {
+	// 	videos, err = xdb.GetItemsFromCart(db, user)
+	// })
+
+	// if err != nil {
+	// 	http.Error(
+	// 		writer,
+	// 		fmt.Sprintf("Could not get items from cart: %v\n", err.Error()),
+	// 		http.StatusInternalServerError,
+	// 	)
+	// 	return
+	// }
+
+	// if len(videos) == 0 {
+	// 	http.Error(writer, "Cart is empty", http.StatusInternalServerError)
+	// 	return
+	// }
+
+	// internal.WithTimer("downloading items from cart using yt-dlp", func() {
+	// 	err = xytdlp.DownloadVideos(videos)
+	// })
+
+	// if err != nil {
+	// 	http.Error(
+	// 		writer,
+	// 		fmt.Sprintf("Could not download videos using yt-dlp: %v\n", err.Error()),
+	// 		http.StatusInternalServerError,
+	// 	)
+	// 	return
+	// }
 }

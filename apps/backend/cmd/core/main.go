@@ -4,23 +4,27 @@ import (
 	"context"
 	"database/sql"
 	"maestro/internal"
+	xamqp "maestro/internal/amqp"
 	xhttp "maestro/internal/http"
 	"net/http"
 	"os"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"google.golang.org/api/option"
 	"google.golang.org/api/youtube/v3"
 )
 
 var youtubeService *youtube.Service
 var db *sql.DB
+var messageQueueConnection *amqp.Connection
+var checkoutMessageQueue amqp.Queue
 var err error
 
 func init() {
 	var wg sync.WaitGroup
-	wg.Add(2)
+	wg.Add(3)
 
 	go func() {
 		internal.WithTimer("initialising youtube client", func() {
@@ -40,6 +44,17 @@ func init() {
 			err = db.Ping()
 			internal.HandleError(err, "Could not ping database")
 		})
+	}()
+
+	go func() {
+		internal.WithTimer(
+			"initialising connection with the rabbit message broker",
+			func() {
+				defer wg.Done()
+				// TODO: Need to close the connection somewhere
+				xamqp.SetupCheckoutQueue(&messageQueueConnection, &checkoutMessageQueue)
+			},
+		)
 	}()
 
 	wg.Wait()

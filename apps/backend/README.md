@@ -11,6 +11,7 @@ I'm new to Go, so documenting this for myself and others serves as a learning to
 | `cmd`     | Contains packages with entry points for invokation (eg. `cmd/core/main.go` contains the web server, `cmd/migrate/main.go` contains the DB migration script) |
 | `db`      | Contains the SQLite database and the SQL migration scripts |
 | `internal` | Contains utilities used throughout the project. Importable as `maestro/internal` |
+| `worker`  | Contains the script the rabbitmq worker will run in order to consume checkout messages and download music out of band |
 
 ## Database
 
