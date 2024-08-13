@@ -17,7 +17,7 @@ published_at, youtube_link, duration_seconds, view_count) values`,
 
 	for index, video := range videos {
 		s := fmt.Sprintf(
-			`("%s", "%s", "%s", "%s", "%s", "%s", %d, %d),`,
+			`('%s', '%s', '%s', '%s', '%s', '%s', %d, %d),`,
 			video.Id,
 			video.Title,
 			video.ChannelTitle,
@@ -38,7 +38,6 @@ published_at, youtube_link, duration_seconds, view_count) values`,
 
 	b.WriteString(";")
 	statement := b.String()
-	fmt.Println(statement)
 	_, err = db.Exec(statement)
 
 	if err != nil {

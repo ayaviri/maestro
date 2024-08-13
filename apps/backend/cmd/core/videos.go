@@ -63,7 +63,7 @@ func VideosResourceHandler(writer http.ResponseWriter, request *http.Request) {
 			return
 		}
 
-		var searchId int64
+		var searchId string
 		searchId, err = xdb.CreateSearch(db, videoSearchQuery, user.Id)
 
 		if err != nil {

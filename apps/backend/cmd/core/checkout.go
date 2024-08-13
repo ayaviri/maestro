@@ -23,7 +23,7 @@ import (
 //
 
 type CheckoutResponseBody struct {
-	JobId int64 `json:"job_id"`
+	JobId string `json:"job_id"`
 }
 
 func CheckoutResourceHandler(writer http.ResponseWriter, request *http.Request) {
@@ -64,7 +64,7 @@ message broker: %v\n`,
 		)
 	}
 
-	var jobId int64
+	var jobId string
 
 	internal.WithTimer("creating job ID and writing it to the database", func() {
 		jobId, err = xdb.CreateNewJob(db)

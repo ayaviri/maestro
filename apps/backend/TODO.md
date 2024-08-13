@@ -1,7 +1,7 @@
-# Roadmap
+# TODO
 
-Ok, now that we know we can obtain the necessary data to go forth with this,
-we need to architect the desired application. Let's start by propping up a 
-web server with an endpoint to search for videos. Then, we'll add a second
-endpoint that, given a Youtube link to a video, will download it and send it
-in the response
+- [ ] Create a file server that will run as a separate process in the worker's environment
+- [ ] Dockerise the worker process, the container should start both the worker and the file server
+- [ ] Update the worker to communicate the endpoint URL of the file server serving the downloaded files to the core web server
+- [ ] Add endpoint in the core web server to poll the status of the checkout job. Upon completion, it'll read the file server's download URL from some destination, and it'll send that to the client
+- [ ] At this point, we can start creating the frontend. Ultimately, once we get around to connecting the aforementioned last few pieces, the frontend will download the audio files from the server sent file server URL

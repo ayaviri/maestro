@@ -8,6 +8,7 @@ import (
 	xamqp "maestro/internal/amqp"
 	xdb "maestro/internal/db"
 	xworker "maestro/internal/worker"
+	"path"
 	"sync"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -84,7 +85,7 @@ func main() {
 
 		for d = range messages {
 			// TODO: We're going to have an issue here if we have other kinds of jobs
-			// to pull out of band
+			// to pull out of band. We'll need some sort of controller
 			var message xworker.DownloadCartMessageBody
 			err = json.Unmarshal(d.Body, &message)
 
@@ -97,19 +98,51 @@ func main() {
 				)
 			})
 
+			var fileDownloadPaths []string
+
 			internal.WithTimer("downloading cart contents", func() {
-				err = DownloadCart(db, message.UserId)
+				// TODO: The download directory needs to be pulled into
+				// some sort of environment file that the file server
+				// can read from as well
+				var cartDownloadDirectory string = path.Join("downloads", message.JobId)
+				var fileNames []string
+				fileNames, err = DownloadCart(
+					db,
+					message.UserId,
+					cartDownloadDirectory,
+				)
+				fileDownloadPaths = make([]string, len(fileNames))
+
+				for index, fileName := range fileNames {
+					fileDownloadPaths[index] = path.Join(
+						cartDownloadDirectory,
+						fileName,
+					)
+				}
+
 				RejectOnError(err, "Failed to download cart contents", d)
 			})
 
-			internal.WithTimer("setting job status to finished", func() {
-				err = xdb.UpdateJobStatus(db, message.JobId, xdb.StatusFinished)
-				RejectOnError(
-					err,
-					"Failed to set job status to finished in database",
-					d,
-				)
-			})
+			internal.WithTimer(
+				"setting job status to finished + adding payload",
+				func() {
+					err = xdb.UpdateJobStatus(db, message.JobId, xdb.StatusFinished)
+					RejectOnError(
+						err,
+						"Failed to set job status to finished in database",
+						d,
+					)
+					// TODO: Update this to include the network location of the file server
+					response := xworker.DownloadCartResponseBody{
+						DownloadUrls: fileDownloadPaths,
+					}
+					var responsePayload []byte
+					responsePayload, err = json.Marshal(response)
+					RejectOnError(err, "Failed to marshal response to JSON", d)
+					err = xdb.AddJobPayload(db, message.JobId, string(responsePayload))
+					RejectOnError(err, "Failed to add response payload to database", d)
+				},
+			)
 
 			d.Ack(false)
 		}

@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	_ "github.com/mattn/go-sqlite3"
 	"maestro/internal"
+	xdb "maestro/internal/db"
 	"os"
 	"path"
 )
@@ -41,9 +41,7 @@ func readSqlScript() (string, error) {
 	)
 
 	if err != nil {
-		return "", errors.New(
-			fmt.Sprintf("Could not read contents of script: %v\n", err.Error()),
-		)
+		return "", fmt.Errorf("Could not read contents of script: %v\n", err.Error())
 	}
 
 	return string(scriptContents), nil
@@ -65,8 +63,7 @@ func main() {
 	var db *sql.DB
 
 	internal.WithTimer("connecting to database", func() {
-		db, err = sql.Open("sqlite3", "./db/maestro.db")
-		internal.HandleError(err, "Failed to connect to database")
+		xdb.EstablishConnection(&db)
 	})
 
 	defer db.Close()

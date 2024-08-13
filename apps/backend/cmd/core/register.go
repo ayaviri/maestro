@@ -63,19 +63,12 @@ func RegistrationResourceHandler(writer http.ResponseWriter, request *http.Reque
 			return
 		}
 
-		// var userId int64
 		_, err = xdb.CreateUser(
 			db,
 			requestBody.Username,
 			requestBody.Password,
 			requestBody.Email,
 		)
-
-		if err != nil {
-			return
-		}
-
-		// err = xdb.CreateCart(db, userId)
 	})
 
 	if err != nil {

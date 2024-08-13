@@ -12,14 +12,14 @@ import (
 var err error
 
 type User struct {
-	Id       int64
+	Id       string
 	Username string
 	Email    string
 }
 
 func GetUserFromToken(db *sql.DB, token string) (User, error) {
 	query := fmt.Sprintf(
-		`select id, username, email from user where token = "%s"`, token,
+		`select id, username, email from app_user where token = '%s'`, token,
 	)
 	var row *sql.Row = db.QueryRow(query)
 	var user User
@@ -35,7 +35,7 @@ func GetUserFromToken(db *sql.DB, token string) (User, error) {
 func IsValidToken(db *sql.DB, token string) (bool, error) {
 	var count int64
 	query := fmt.Sprintf(
-		"select count(*) from user where token=\"%s\";", token,
+		`select count(*) from app_user where token='%s';`, token,
 	)
 	count, err = QueryCount(db, query)
 
@@ -51,7 +51,7 @@ func IsValidToken(db *sql.DB, token string) (bool, error) {
 func IsUsernameAvailable(db *sql.DB, username string) (bool, error) {
 	var count int64
 	query := fmt.Sprintf(
-		"select count(*) from user where username=\"%s\";", username,
+		`select count(*) from app_user where username='%s';`, username,
 	)
 	count, err = QueryCount(db, query)
 
@@ -62,36 +62,30 @@ func IsUsernameAvailable(db *sql.DB, username string) (bool, error) {
 	return count == 0, nil
 }
 
+// Returns the ID of the created user
 func CreateUser(
 	db *sql.DB,
 	username string,
 	password string,
 	email string,
-) (int64, error) {
+) (string, error) {
 	var passwordHash string
 	passwordHash, err = internal.HashString(password)
 
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 
+	userId := uuid.NewString()
 	statement := fmt.Sprintf(
-		`insert into user (username, password_hash, email)
-values("%s", "%s", "%s");`,
-		username, passwordHash, email,
+		`insert into app_user (id, username, password_hash, email)
+values('%s', '%s', '%s', '%s');`,
+		userId, username, passwordHash, email,
 	)
-	var result sql.Result
-	result, err = db.Exec(statement)
+	_, err = db.Exec(statement)
 
 	if err != nil {
-		return 0, err
-	}
-
-	var userId int64
-	userId, err = result.LastInsertId()
-
-	if err != nil {
-		return 0, err
+		return "", err
 	}
 
 	return userId, nil
@@ -114,7 +108,7 @@ func AuthenticateAndGenerateToken(
 
 	var count int64
 	query := fmt.Sprintf(
-		`select count(*) from user where username="%s" and password_hash="%s";`,
+		`select count(*) from app_user where username='%s' and password_hash='%s';`,
 		username, passwordHash,
 	)
 	count, err = QueryCount(db, query)
@@ -139,7 +133,7 @@ func AuthenticateAndGenerateToken(
 
 func UpdateBearerToken(db *sql.DB, username, bearerToken string) error {
 	statement := fmt.Sprintf(
-		"update user set token = \"%s\" where username = \"%s\"",
+		`update app_user set token = '%s' where username = '%s'`,
 		bearerToken, username,
 	)
 	var result sql.Result

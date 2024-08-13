@@ -36,12 +36,6 @@ func CartResourceHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	// var cartId int64
-
-	// internal.WithTimer("getting user cart", func() {
-	// 	cartId, err = xdb.GetUserCartId(db, user.Id)
-	// })
-
 	if err != nil {
 		http.Error(
 			writer,

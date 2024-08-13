@@ -10,7 +10,14 @@ import (
 	xytdlp "maestro/internal/ytdlp"
 )
 
-func DownloadCart(db *sql.DB, userId int64) error {
+// Reads the cart for the given user and downloads in into the given
+// directory (path from project root). Returns a list of downloaded file
+// NAMES (eg. song.mp3)
+func DownloadCart(
+	db *sql.DB,
+	userId string,
+	downloadDirectory string,
+) ([]string, error) {
 	var videos []xyoutube.Video
 
 	internal.WithTimer("getting cart contents", func() {
@@ -18,24 +25,28 @@ func DownloadCart(db *sql.DB, userId int64) error {
 	})
 
 	if err != nil {
-		return errors.New(
-			fmt.Sprintf("Could not get items from cart: %v\n", err.Error()),
+		return []string{}, fmt.Errorf(
+			"Could not get items from cart: %v\n",
+			err.Error(),
 		)
 	}
 
 	if len(videos) == 0 {
-		return errors.New("Cart is empty")
+		return []string{}, errors.New("Cart is empty")
 	}
 
+	var fileDownloadPaths []string
+
 	internal.WithTimer("downloading items from cart using yt-dlp", func() {
-		err = xytdlp.DownloadVideos(videos)
+		fileDownloadPaths, err = xytdlp.DownloadVideos(videos, downloadDirectory)
 	})
 
 	if err != nil {
-		return errors.New(
-			fmt.Sprintf("Could not download vidoes using yt-dlp: %v\n", err.Error()),
+		return []string{}, fmt.Errorf(
+			"Could not download vidoes using yt-dlp: %v\n",
+			err.Error(),
 		)
 	}
 
-	return nil
+	return fileDownloadPaths, nil
 }
