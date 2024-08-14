@@ -19,7 +19,8 @@ import (
 var youtubeService *youtube.Service
 var db *sql.DB
 var messageQueueConnection *amqp.Connection
-var checkoutMessageQueue amqp.Queue
+var checkoutRequestQueue amqp.Queue
+var checkoutCompletionQueue amqp.Queue
 var err error
 
 func init() {
@@ -30,6 +31,7 @@ func init() {
 		internal.WithTimer("initialising youtube client", func() {
 			defer wg.Done()
 			ctx := context.Background()
+			// TODO: Load from a dotenv file
 			var apiKey string = os.Getenv("GCS_API_KEY")
 			youtubeService, err = youtube.NewService(ctx, option.WithAPIKey(apiKey))
 			internal.HandleError(err, "Could not initialise Youtube client")
@@ -49,7 +51,11 @@ func init() {
 			func() {
 				defer wg.Done()
 				// TODO: Need to close the connection somewhere
-				xamqp.SetupCheckoutQueue(&messageQueueConnection, &checkoutMessageQueue)
+				xamqp.SetupQueues(
+					&messageQueueConnection,
+					&checkoutRequestQueue,
+					&checkoutCompletionQueue,
+				)
 			},
 		)
 	}()
@@ -90,6 +96,12 @@ func initialiseServer() {
 		"/checkout",
 		loggingHandler(
 			authMiddlewareFactory.New(http.HandlerFunc(CheckoutResourceHandler)),
+		),
+	)
+	http.Handle(
+		"/job/",
+		loggingHandler(
+			authMiddlewareFactory.New(http.HandlerFunc(JobResourceHandler)),
 		),
 	)
 	// TODO: Need to introduce TLS here

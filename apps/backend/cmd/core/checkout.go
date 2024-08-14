@@ -8,10 +8,9 @@ import (
 	xhttp "maestro/internal/http"
 	xworker "maestro/internal/worker"
 
+	"github.com/google/uuid"
 	amqp "github.com/rabbitmq/amqp091-go"
 
-	// xyoutube "maestro/internal/youtube"
-	// xytdlp "maestro/internal/ytdlp"
 	"net/http"
 )
 
@@ -56,33 +55,34 @@ func CheckoutResourceHandler(writer http.ResponseWriter, request *http.Request) 
 		http.Error(
 			writer,
 			fmt.Sprintf(
-				`Could not construct channel of communication with Rabbit 
-message broker: %v\n`,
+				`Could not construct channel of communication with RabbitMQ server: %v\n`,
 				err.Error(),
 			),
 			http.StatusInternalServerError,
 		)
 	}
 
-	var jobId string
+	jobId := uuid.NewString()
 
-	internal.WithTimer("creating job ID and writing it to the database", func() {
-		jobId, err = xdb.CreateNewJob(db)
-	})
+	// var jobId string
 
-	if err != nil {
-		http.Error(
-			writer,
-			fmt.Sprintf("Could not create job in database: %v\n", err.Error()),
-			http.StatusInternalServerError,
-		)
-		return
-	}
+	// internal.WithTimer("creating job ID and writing it to the database", func() {
+	// 	jobId, err = xdb.CreateNewJob(db)
+	// })
 
-	internal.WithTimer("posting job message for worker", func() {
-		var messageBody []byte
-		messageBody, err = json.Marshal(
-			xworker.DownloadCartMessageBody{UserId: user.Id, JobId: jobId},
+	// if err != nil {
+	// 	http.Error(
+	// 		writer,
+	// 		fmt.Sprintf("Could not create job in database: %v\n", err.Error()),
+	// 		http.StatusInternalServerError,
+	// 	)
+	// 	return
+	// }
+
+	internal.WithTimer("posting checkout request message for worker", func() {
+		var requestMessage []byte
+		requestMessage, err = json.Marshal(
+			xworker.CheckoutRequestMessage{UserId: user.Id, JobId: jobId},
 		)
 
 		if err != nil {
@@ -91,13 +91,13 @@ message broker: %v\n`,
 
 		err = channel.Publish(
 			"",
-			checkoutMessageQueue.Name,
+			checkoutRequestQueue.Name,
 			false,
 			false,
 			amqp.Publishing{
 				DeliveryMode: amqp.Persistent,
 				ContentType:  "text/plain",
-				Body:         messageBody,
+				Body:         requestMessage,
 			},
 		)
 	})

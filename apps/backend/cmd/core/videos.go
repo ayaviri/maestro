@@ -85,6 +85,7 @@ func VideosResourceHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	// TODO: Create a struct for this response
 	var videosJson []byte
 	videosJson, err = json.Marshal(videos)
 
