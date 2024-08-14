@@ -96,7 +96,6 @@ func JobResourceHandler(writer http.ResponseWriter, request *http.Request) {
 	// that it should terminate. Heartbeat goroutine will terminate when this
 	// channel is closed
 	heartbeatTerminationChannel := make(chan int)
-	defer close(heartbeatTerminationChannel)
 	go xhttp.Heartbeat(1*time.Second, writer, flusher, heartbeatTerminationChannel)
 	go awaitCheckoutCompletionMessage(
 		messages,

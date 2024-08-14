@@ -64,21 +64,6 @@ func CheckoutResourceHandler(writer http.ResponseWriter, request *http.Request) 
 
 	jobId := uuid.NewString()
 
-	// var jobId string
-
-	// internal.WithTimer("creating job ID and writing it to the database", func() {
-	// 	jobId, err = xdb.CreateNewJob(db)
-	// })
-
-	// if err != nil {
-	// 	http.Error(
-	// 		writer,
-	// 		fmt.Sprintf("Could not create job in database: %v\n", err.Error()),
-	// 		http.StatusInternalServerError,
-	// 	)
-	// 	return
-	// }
-
 	internal.WithTimer("posting checkout request message for worker", func() {
 		var requestMessage []byte
 		requestMessage, err = json.Marshal(
