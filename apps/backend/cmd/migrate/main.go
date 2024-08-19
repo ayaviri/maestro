@@ -8,6 +8,8 @@ import (
 	xdb "maestro/internal/db"
 	"os"
 	"path"
+
+	"github.com/ayaviri/goutils/timer"
 )
 
 var err error
@@ -52,7 +54,7 @@ func readSqlScript() (string, error) {
 func main() {
 	var script string
 
-	internal.WithTimer("pulling script from disk", func() {
+	timer.WithTimer("pulling script from disk", func() {
 		script, err = readSqlScript()
 		internal.HandleError(
 			err,
@@ -62,13 +64,13 @@ func main() {
 
 	var db *sql.DB
 
-	internal.WithTimer("connecting to database", func() {
+	timer.WithTimer("connecting to database", func() {
 		xdb.EstablishConnection(&db)
 	})
 
 	defer db.Close()
 
-	internal.WithTimer("executing migration script", func() {
+	timer.WithTimer("executing migration script", func() {
 		_, err = db.Exec(script)
 		// TODO: This might leave the DB in an intermediate state, so it's
 		// important to make both migration directions idempotent

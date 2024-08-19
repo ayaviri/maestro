@@ -3,10 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"maestro/internal"
 	xdb "maestro/internal/db"
 	xhttp "maestro/internal/http"
 	"net/http"
+
+	"github.com/ayaviri/goutils/timer"
 )
 
 //  ____   ____ _   _ _____ __  __    _    ____
@@ -40,7 +41,7 @@ func LoginResourceHandler(writer http.ResponseWriter, request *http.Request) {
 
 	var requestBody UserLoginRequestBody
 
-	internal.WithTimer("reading & unmarshaling request JSON body", func() {
+	timer.WithTimer("reading & unmarshaling request JSON body", func() {
 		err = xhttp.ReadUnmarshalRequestBody(request, &requestBody)
 	})
 
@@ -55,7 +56,7 @@ func LoginResourceHandler(writer http.ResponseWriter, request *http.Request) {
 
 	var responseBody []byte
 
-	internal.WithTimer("verifying user credentials", func() {
+	timer.WithTimer("verifying user credentials", func() {
 		var bearerToken string
 		bearerToken, err = xdb.AuthenticateAndGenerateToken(
 			db,

@@ -44,6 +44,8 @@ create table if not exists search (
     foreign key (app_user_id) references app_user(id)
 );
 
+create index if not exists search_query on search(query);
+
 create table if not exists search_result (
     id text primary key,
     search_id text not null,

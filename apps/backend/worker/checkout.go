@@ -4,10 +4,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"maestro/internal"
 	xdb "maestro/internal/db"
 	xyoutube "maestro/internal/youtube"
 	xytdlp "maestro/internal/ytdlp"
+
+	"github.com/ayaviri/goutils/timer"
 )
 
 // Reads the cart for the given user and downloads in into the given
@@ -20,7 +21,7 @@ func DownloadCart(
 ) ([]string, error) {
 	var videos []xyoutube.Video
 
-	internal.WithTimer("getting cart contents", func() {
+	timer.WithTimer("getting cart contents", func() {
 		videos, err = xdb.GetItemsFromCart(db, userId)
 	})
 
@@ -37,7 +38,7 @@ func DownloadCart(
 
 	var fileDownloadPaths []string
 
-	internal.WithTimer("downloading items from cart using yt-dlp", func() {
+	timer.WithTimer("downloading items from cart using yt-dlp", func() {
 		fileDownloadPaths, err = xytdlp.DownloadVideos(videos, downloadDirectory)
 	})
 

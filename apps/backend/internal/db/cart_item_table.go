@@ -63,7 +63,7 @@ func GetItemsFromCart(db *sql.DB, userId string) ([]xyoutube.Video, error) {
 		)
 
 		if err != nil {
-			return cartItems, nil
+			return cartItems, err
 		}
 
 		cartItems = append(cartItems, cartItem)

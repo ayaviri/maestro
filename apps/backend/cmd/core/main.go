@@ -11,7 +11,9 @@ import (
 	"os"
 	"sync"
 
+	"github.com/ayaviri/goutils/timer"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"github.com/rs/cors"
 	"google.golang.org/api/option"
 	"google.golang.org/api/youtube/v3"
 )
@@ -29,7 +31,7 @@ func init() {
 	wg.Add(3)
 
 	go func() {
-		internal.WithTimer("initialising youtube client", func() {
+		timer.WithTimer("initialising youtube client", func() {
 			defer wg.Done()
 			ctx := context.Background()
 			// TODO: Load from a dotenv file
@@ -40,14 +42,14 @@ func init() {
 	}()
 
 	go func() {
-		internal.WithTimer("initialising long-lived database connection", func() {
+		timer.WithTimer("initialising long-lived database connection", func() {
 			defer wg.Done()
 			xdb.EstablishConnection(&db)
 		})
 	}()
 
 	go func() {
-		internal.WithTimer(
+		timer.WithTimer(
 			"initialising connection with the rabbit message broker",
 			func() {
 				defer wg.Done()
@@ -74,12 +76,22 @@ func init() {
 func initialiseServer() {
 	authMiddlewareFactory := xhttp.BearerTokenAuthMiddlewareFactory{DB: db}
 	loggingHandler := xhttp.NewLoggingHandler(os.Stdout)
+	c := cors.New(cors.Options{
+		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodDelete},
+		AllowedHeaders:   []string{"*"},
+		AllowCredentials: true,
+	})
 
-	http.Handle("/health", loggingHandler(http.HandlerFunc(HealthResourceHandler)))
+	http.Handle(
+		"/health",
+		c.Handler((loggingHandler(http.HandlerFunc(HealthResourceHandler)))),
+	)
 	http.Handle(
 		"/videos",
 		loggingHandler(
-			authMiddlewareFactory.New(http.HandlerFunc(VideosResourceHandler)),
+			c.Handler(
+				authMiddlewareFactory.New(http.HandlerFunc(VideosResourceHandler)),
+			),
 		),
 	)
 	http.Handle(
@@ -116,5 +128,5 @@ func initialiseServer() {
 }
 
 func main() {
-	internal.WithTimer("running HTTP server", initialiseServer)
+	timer.WithTimer("running HTTP server", initialiseServer)
 }

@@ -3,13 +3,33 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"maestro/internal"
 	xdb "maestro/internal/db"
 	xhttp "maestro/internal/http"
 	xyoutube "maestro/internal/youtube"
 	"net/http"
 	"net/url"
+	"time"
+
+	"github.com/ayaviri/goutils/timer"
 )
+
+//  ____   ____ _   _ _____ __  __    _    ____
+// / ___| / ___| | | | ____|  \/  |  / \  / ___|
+// \___ \| |   | |_| |  _| | |\/| | / _ \ \___ \
+//  ___) | |___|  _  | |___| |  | |/ ___ \ ___) |
+// |____/ \____|_| |_|_____|_|  |_/_/   \_\____/
+//
+
+type VideosResponseBody struct {
+	Videos []xyoutube.Video `json:"videos"`
+}
+
+//  _   _    _    _   _ ____  _     _____ ____  ____
+// | | | |  / \  | \ | |  _ \| |   | ____|  _ \/ ___|
+// | |_| | / _ \ |  \| | | | | |   |  _| | |_) \___ \
+// |  _  |/ ___ \| |\  | |_| | |___| |___|  _ < ___) |
+// |_| |_/_/   \_\_| \_|____/|_____|_____|_| \_\____/
+//
 
 func VideosResourceHandler(writer http.ResponseWriter, request *http.Request) {
 	// TODO: Update this to direct various kinds of requests for the same resource
@@ -38,56 +58,72 @@ func VideosResourceHandler(writer http.ResponseWriter, request *http.Request) {
 	// TODO: Introduce pagination parameters
 	videos := make([]xyoutube.Video, 0)
 
-	internal.WithTimer("fetching videos from Youtube Data API", func() {
-		videos, err = xyoutube.SearchVideosByQuery(
-			youtubeService, videoSearchQuery,
-		)
+	// TODO: IMPLEMENT !!!
+	timer.WithTimer("checking for recent searches matching query", func() {
+		videos, err = xdb.GetRecentSearchResults(db, videoSearchQuery, 15*time.Minute)
 	})
 
 	if err != nil {
 		http.Error(
 			writer,
-			fmt.Sprintf(
-				"Could not fetch videos from Youtube Data API: %v\n",
-				err.Error(),
-			),
+			fmt.Sprintf("Could not fetch recent search results: %v\n", err.Error()),
 			http.StatusInternalServerError,
 		)
 		return
 	}
 
-	internal.WithTimer("logging results to database", func() {
-		err = xdb.CreateVideos(db, videos)
+	if len(videos) == 0 {
+		timer.WithTimer("fetching videos from Youtube Data API", func() {
+			videos, err = xyoutube.SearchVideosByQuery(
+				youtubeService, videoSearchQuery,
+			)
+		})
 
 		if err != nil {
+			http.Error(
+				writer,
+				fmt.Sprintf(
+					"Could not fetch videos from Youtube Data API: %v\n",
+					err.Error(),
+				),
+				http.StatusInternalServerError,
+			)
 			return
 		}
 
-		var searchId string
-		searchId, err = xdb.CreateSearch(db, videoSearchQuery, user.Id)
+		timer.WithTimer("logging results to database", func() {
+			err = xdb.CreateVideos(db, videos)
+
+			if err != nil {
+				return
+			}
+
+			var searchId string
+			searchId, err = xdb.CreateSearch(db, videoSearchQuery, user.Id)
+
+			if err != nil {
+				return
+			}
+
+			err = xdb.CreateSearchResults(db, searchId, videos)
+		})
 
 		if err != nil {
+			http.Error(
+				writer,
+				fmt.Sprintf(
+					"Could not log results to database: %v\n",
+					err.Error(),
+				),
+				http.StatusInternalServerError,
+			)
 			return
 		}
-
-		err = xdb.CreateSearchResults(db, searchId, videos)
-	})
-
-	if err != nil {
-		http.Error(
-			writer,
-			fmt.Sprintf(
-				"Could not log results to database: %v\n",
-				err.Error(),
-			),
-			http.StatusInternalServerError,
-		)
-		return
 	}
 
 	// TODO: Create a struct for this response
-	var videosJson []byte
-	videosJson, err = json.Marshal(videos)
+	var responseBody []byte
+	responseBody, err = json.Marshal(VideosResponseBody{Videos: videos})
 
 	if err != nil {
 		http.Error(
@@ -100,5 +136,5 @@ func VideosResourceHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	writer.Write(videosJson)
+	writer.Write(responseBody)
 }

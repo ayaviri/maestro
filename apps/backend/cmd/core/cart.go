@@ -3,12 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"maestro/internal"
 	xdb "maestro/internal/db"
 	xhttp "maestro/internal/http"
 	xyoutube "maestro/internal/youtube"
 	"net/http"
 	"net/url"
+
+	"github.com/ayaviri/goutils/timer"
 )
 
 //  ____   ___  _   _ _____ _____ ____
@@ -21,7 +22,7 @@ import (
 func CartResourceHandler(writer http.ResponseWriter, request *http.Request) {
 	var user xdb.User
 
-	internal.WithTimer("getting user from auth bearer token", func() {
+	timer.WithTimer("getting user from auth bearer token", func() {
 		var bearerToken string
 		bearerToken, _ = xhttp.GetAuthBearerToken(request)
 		user, err = xdb.GetUserFromToken(db, bearerToken)
@@ -80,7 +81,7 @@ func removeFromCartHandler(
 ) {
 	var videoId string
 
-	internal.WithTimer("getting video ID from query parameters", func() {
+	timer.WithTimer("getting video ID from query parameters", func() {
 		var queryParameters url.Values = request.URL.Query()
 		videoId = queryParameters.Get("v")
 	})
@@ -94,7 +95,7 @@ func removeFromCartHandler(
 		return
 	}
 
-	internal.WithTimer("removing video from cart", func() {
+	timer.WithTimer("removing video from cart", func() {
 		err = xdb.RemoveItemFromCart(db, user.Id, videoId)
 	})
 
@@ -115,7 +116,7 @@ func addToCartHandler(
 ) {
 	var videoId string
 
-	internal.WithTimer("getting video ID from query parameters", func() {
+	timer.WithTimer("getting video ID from query parameters", func() {
 		var queryParameters url.Values = request.URL.Query()
 		videoId = queryParameters.Get("v")
 	})
@@ -129,7 +130,7 @@ func addToCartHandler(
 		return
 	}
 
-	internal.WithTimer("adding video to cart", func() {
+	timer.WithTimer("adding video to cart", func() {
 		err = xdb.AddItemToCart(db, user.Id, videoId)
 	})
 
@@ -154,7 +155,7 @@ func getCartHandler(
 	// array in GetItemsFromCart
 	var cartItems []xyoutube.Video
 
-	internal.WithTimer("getting cart items", func() {
+	timer.WithTimer("getting cart items", func() {
 		cartItems, err = xdb.GetItemsFromCart(db, user.Id)
 	})
 
@@ -169,7 +170,7 @@ func getCartHandler(
 
 	var responseBody []byte
 
-	internal.WithTimer("marshalling cart items to JSON", func() {
+	timer.WithTimer("marshalling cart items to JSON", func() {
 		response := GetCartResponseBody{CartItems: cartItems}
 		responseBody, err = json.Marshal(response)
 	})

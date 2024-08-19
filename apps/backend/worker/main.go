@@ -11,6 +11,7 @@ import (
 	"path"
 	"sync"
 
+	"github.com/ayaviri/goutils/timer"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -25,7 +26,7 @@ func init() {
 	wg.Add(2)
 
 	go func() {
-		internal.WithTimer(
+		timer.WithTimer(
 			"initialising connection to rabbitmq server, declaring necessary queues",
 			func() {
 				defer wg.Done()
@@ -39,7 +40,7 @@ func init() {
 	}()
 
 	go func() {
-		internal.WithTimer("initialising long-lived database connection", func() {
+		timer.WithTimer("initialising long-lived database connection", func() {
 			defer wg.Done()
 			xdb.EstablishConnection(&db)
 		})
@@ -53,7 +54,7 @@ func main() {
 	defer messageQueueConnection.Close()
 	var channel *amqp.Channel
 
-	internal.WithTimer(
+	timer.WithTimer(
 		"constructing channel of communciation with rabbitmq server",
 		func() {
 			channel, err = messageQueueConnection.Channel()
@@ -67,7 +68,7 @@ func main() {
 	defer channel.Close()
 	var messages <-chan amqp.Delivery
 
-	internal.WithTimer(
+	timer.WithTimer(
 		"opening channel for asynchronous message stream from queue",
 		func() {
 			messages, err = channel.Consume(
@@ -101,7 +102,7 @@ func main() {
 
 			var fileDownloadPaths []string
 
-			internal.WithTimer("downloading cart contents", func() {
+			timer.WithTimer("downloading cart contents", func() {
 				// TODO: The download directory needs to be pulled into
 				// some sort of environment file that the file server
 				// can read from as well
@@ -129,7 +130,7 @@ func main() {
 			// TODO: Update this to include the network location of the file server
 			var completionMessage []byte
 
-			internal.WithTimer("constructing checkout completion message", func() {
+			timer.WithTimer("constructing checkout completion message", func() {
 				completionMessage, err = json.Marshal(
 					xworker.CheckoutCompletionMessage{
 						JobId:        requestMessage.JobId,
@@ -143,7 +144,7 @@ func main() {
 				)
 			})
 
-			internal.WithTimer(
+			timer.WithTimer(
 				"posting checkout completion message back to core web server",
 				func() {
 					err = channel.Publish(

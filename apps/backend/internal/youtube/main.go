@@ -2,9 +2,9 @@ package youtube
 
 import (
 	"fmt"
-	"maestro/internal"
 	"time"
 
+	"github.com/ayaviri/goutils/timer"
 	"github.com/sosodev/duration"
 	"google.golang.org/api/youtube/v3"
 )
@@ -41,7 +41,7 @@ func SearchVideosByQuery(
 ) ([]Video, error) {
 	var searchResponse *youtube.SearchListResponse
 
-	internal.WithTimer("requesting Youtube's Search service", func() {
+	timer.WithTimer("requesting Youtube's Search service", func() {
 		parts := []string{"snippet"}
 		var call *youtube.SearchListCall = youtubeService.Search.List(parts)
 		call = call.Type("video")
@@ -58,7 +58,7 @@ func SearchVideosByQuery(
 	var searchResults []*youtube.SearchResult = searchResponse.Items
 	videoIds := make([]string, len(searchResults))
 
-	internal.WithTimer("obtaining the ID for each search result", func() {
+	timer.WithTimer("obtaining the ID for each search result", func() {
 		for index, searchResult := range searchResults {
 			var id *youtube.ResourceId = searchResult.Id
 			videoIds[index] = id.VideoId
@@ -67,7 +67,7 @@ func SearchVideosByQuery(
 
 	var videosResponse *youtube.VideoListResponse
 
-	internal.WithTimer("requesting Youtube's Video service", func() {
+	timer.WithTimer("requesting Youtube's Video service", func() {
 		parts := []string{"contentDetails", "statistics"}
 		var call *youtube.VideosListCall = youtubeService.Videos.List(parts)
 		call = call.Id(videoIds...)
@@ -81,7 +81,7 @@ func SearchVideosByQuery(
 	var videoResults []*youtube.Video = videosResponse.Items
 	videos := []Video{}
 
-	internal.WithTimer(
+	timer.WithTimer(
 		"mapping search and video results to desired schema, filtering out Shorts",
 		func() {
 			for index, searchResult := range searchResults {

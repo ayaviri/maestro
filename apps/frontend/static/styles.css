@@ -1,0 +1,38 @@
+body {
+    background-color: black;
+    font-family: serif;
+    font-size: 24px;
+    color: white;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+}
+
+#maestro {
+  color: tan;
+}
+
+#app_container {
+  height: 100vh;
+  width: 75%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center; 
+}
+
+#search_results {
+  margin: 1.5em;
+  display: flex;
+  flex-direction: column;
+}
+
+input {
+  font-size: 20px;
+}
+
+.search_result:hover {
+  cursor: pointer;
+  color: tan;
+}

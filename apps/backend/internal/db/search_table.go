@@ -3,6 +3,8 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	xyoutube "maestro/internal/youtube"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -21,4 +23,53 @@ func CreateSearch(db *sql.DB, videoSearchQuery string, userId string) (string, e
 	}
 
 	return searchId, nil
+}
+
+// Queries the search table for searches with the given query within the given duration
+// (eg. GetRecentSearchResults(db, "vsauce", 15*time.Minute)) gets videos returned by the
+// query "vsauce" within the last 15 minutes
+func GetRecentSearchResults(
+	db *sql.DB,
+	videoSearchQuery string,
+	within time.Duration,
+) ([]xyoutube.Video, error) {
+	withinSeconds := int64(within.Seconds())
+	query := fmt.Sprintf(
+		`select video.* from video
+        join search_result on video.youtube_id = search_result.video_youtube_id
+        join search on search_result.search_id = search.id
+        where search.query = '%s'
+        and search.executed_at >= NOW() - interval '%d seconds';`,
+		videoSearchQuery, withinSeconds,
+	)
+	var rows *sql.Rows
+	rows, err = db.Query(query)
+	videos := make([]xyoutube.Video, 0)
+
+	if err != nil {
+		return videos, err
+	}
+
+	for rows.Next() {
+		// TODO: The cart_item table has similar code, abstract
+		var video xyoutube.Video
+		err = rows.Scan(
+			&video.Id,
+			&video.Title,
+			&video.ChannelTitle,
+			&video.Description,
+			&video.PublishedAt,
+			&video.Link,
+			&video.DurationSeconds,
+			&video.ViewCount,
+		)
+
+		if err != nil {
+			return videos, err
+		}
+
+		videos = append(videos, video)
+	}
+
+	return videos, nil
 }

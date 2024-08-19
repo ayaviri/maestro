@@ -3,11 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"maestro/internal"
 	xdb "maestro/internal/db"
 	xhttp "maestro/internal/http"
 	xworker "maestro/internal/worker"
 
+	"github.com/ayaviri/goutils/timer"
 	"github.com/google/uuid"
 	amqp "github.com/rabbitmq/amqp091-go"
 
@@ -33,7 +33,7 @@ func CheckoutResourceHandler(writer http.ResponseWriter, request *http.Request) 
 
 	var user xdb.User
 
-	internal.WithTimer("getting user from auth bearer token", func() {
+	timer.WithTimer("getting user from auth bearer token", func() {
 		var bearerToken string
 		bearerToken, _ = xhttp.GetAuthBearerToken(request)
 		user, err = xdb.GetUserFromToken(db, bearerToken)
@@ -64,7 +64,7 @@ func CheckoutResourceHandler(writer http.ResponseWriter, request *http.Request) 
 
 	jobId := uuid.NewString()
 
-	internal.WithTimer("posting checkout request message for worker", func() {
+	timer.WithTimer("posting checkout request message for worker", func() {
 		var requestMessage []byte
 		requestMessage, err = json.Marshal(
 			xworker.CheckoutRequestMessage{UserId: user.Id, JobId: jobId},

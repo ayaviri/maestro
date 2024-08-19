@@ -3,10 +3,11 @@ package main
 import (
 	"errors"
 	"fmt"
-	"maestro/internal"
 	xdb "maestro/internal/db"
 	xhttp "maestro/internal/http"
 	"net/http"
+
+	"github.com/ayaviri/goutils/timer"
 )
 
 //  ____   ____ _   _ _____ __  __    _    ____
@@ -37,7 +38,7 @@ func RegistrationResourceHandler(writer http.ResponseWriter, request *http.Reque
 
 	var requestBody UserRegistrationRequestBody
 
-	internal.WithTimer("reading & unmarshaling request JSON body", func() {
+	timer.WithTimer("reading & unmarshaling request JSON body", func() {
 		err = xhttp.ReadUnmarshalRequestBody(request, &requestBody)
 	})
 
@@ -50,7 +51,7 @@ func RegistrationResourceHandler(writer http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	internal.WithTimer("creating user and user cart", func() {
+	timer.WithTimer("creating user and user cart", func() {
 		var usernameAvailable bool
 		usernameAvailable, err = xdb.IsUsernameAvailable(db, requestBody.Username)
 

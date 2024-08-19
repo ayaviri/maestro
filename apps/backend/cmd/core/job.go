@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"maestro/internal"
 	"net/http"
 	"strings"
 	"time"
@@ -13,6 +12,7 @@ import (
 	xhttp "maestro/internal/http"
 	xworker "maestro/internal/worker"
 
+	"github.com/ayaviri/goutils/timer"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -68,7 +68,7 @@ func JobResourceHandler(writer http.ResponseWriter, request *http.Request) {
 	defer messageQueueChannel.Close()
 	var messages <-chan amqp.Delivery
 
-	internal.WithTimer(
+	timer.WithTimer(
 		"opening channel for asynchronous message stream from queue",
 		func() {
 			messages, err = messageQueueChannel.Consume(
