@@ -97,7 +97,7 @@ func initialiseServer() {
 	http.Handle(
 		"/cart",
 		loggingHandler(
-			authMiddlewareFactory.New(http.HandlerFunc(CartResourceHandler)),
+			c.Handler(authMiddlewareFactory.New(http.HandlerFunc(CartResourceHandler))),
 		),
 	)
 	http.Handle(

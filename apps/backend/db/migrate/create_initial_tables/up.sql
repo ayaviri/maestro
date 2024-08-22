@@ -58,8 +58,7 @@ create table if not exists search_result (
 );
 
 create table if not exists job (
-    id text primary key, -- uuid string
-    status text not null,
+    id text primary key, -- uuid string status text not null,
     response_payload text, -- a json string
     created_at timestamp default current_timestamp
 );

@@ -50,3 +50,18 @@ export async function searchVideos(query) {
 
   return response
 }
+
+export async function addToCart(videoId) {
+  const bearerToken = utils.getBearerToken()
+  const response = await fetch(
+    `http://localhost:8000/cart?v=${videoId}`, 
+    { 
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${bearerToken}`
+      }
+    }
+  )
+
+  return response
+}

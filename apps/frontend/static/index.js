@@ -6,6 +6,12 @@ if (utils.getBearerToken() == null) {
   window.location.href = "/login.html"
 }
 
+document.addEventListener("keyup", function(event) {
+  if (event.key == "/") {
+    document.getElementById("query").focus()
+  }
+})
+
 document.getElementById("search").addEventListener("submit", async function(event) {
   event.preventDefault()
   const resultsDiv = document.getElementById("search_results")
@@ -34,13 +40,36 @@ document.getElementById("search").addEventListener("submit", async function(even
   }
 })
 
-function createSearchResult(video) {
-  const resultItem = document.createElement("div")
-  resultItem.setAttribute("class", "search_result")
-  resultItem.setAttribute("onclick", `window.open('${video.link}', 'mywindow')`)
-  resultItem.textContent = `${decodeURIComponent(video.title)} - 
-${decodeURIComponent(video.channel_title)}`
-  console.log(video.title)
+const MAX_LENGTH_CHARS = 50
 
-  return resultItem
+function createSearchResult(video) {
+  const container = document.createElement("div")
+  container.setAttribute("class", "search_result")
+
+  const resultTitle = document.createElement("div")
+  resultTitle.setAttribute("class", "search_result_title")
+  resultTitle.setAttribute("onclick", `window.open('${video.link}', 'mywindow')`)
+  const title = `${decodeURIComponent(video.title)} - 
+${decodeURIComponent(video.channel_title)}`
+  resultTitle.textContent = title.length > MAX_LENGTH_CHARS ? title.slice(0, MAX_LENGTH_CHARS) + "..." : title
+
+  const addToCart = document.createElement("div")
+  addToCart.setAttribute("class", "add_to_cart")
+  addToCart.setAttribute("id", video.id)
+  addToCart.textContent = "+"
+  addToCart.addEventListener("click", async function(event) {
+    const videoId = event.target.id
+    const response = await api.addToCart(videoId)
+
+    if (!response.ok) {
+      console.log(":(")
+    } else {
+      addToCart.textContent = ":)"
+    }
+  })
+
+  container.appendChild(resultTitle)
+  container.appendChild(addToCart)
+
+  return container
 }

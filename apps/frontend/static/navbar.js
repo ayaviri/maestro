@@ -10,10 +10,10 @@ class HamburgerMenu extends HTMLElement {
  <nav id="menu">
    <ul>
      <li><a href="/index.html">home</a></li>
+     <li><a href="#">cart</a></li>
      <li><a href="/login.html">login</a></li>
      <li id="logout"><a href="#">logout</a></li>
      <li><a href="/register.html">register</a></li>
-     <li><a href="#">cart</a></li>
    </ul>
  </nav>
     `
