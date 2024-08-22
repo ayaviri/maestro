@@ -102,9 +102,12 @@ func initialiseServer() {
 	)
 	http.Handle(
 		"/register",
-		loggingHandler(http.HandlerFunc(RegistrationResourceHandler)),
+		loggingHandler(c.Handler(http.HandlerFunc(RegistrationResourceHandler))),
 	)
-	http.Handle("/login", loggingHandler(http.HandlerFunc(LoginResourceHandler)))
+	http.Handle(
+		"/login",
+		loggingHandler(c.Handler(http.HandlerFunc(LoginResourceHandler))),
+	)
 	http.Handle(
 		"/checkout",
 		loggingHandler(

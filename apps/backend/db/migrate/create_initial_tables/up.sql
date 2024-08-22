@@ -29,8 +29,8 @@ create table if not exists cart_item (
     app_user_id text not null,
     video_youtube_id text not null,
     added_at timestamp default current_timestamp,
-    foreign key (app_user_id) references app_user(id),
-    foreign key (video_youtube_id) references video(youtube_id),
+    foreign key (app_user_id) references app_user(id) on delete cascade,
+    foreign key (video_youtube_id) references video(youtube_id) on delete cascade,
     unique(app_user_id, video_youtube_id)
 );
 
@@ -41,7 +41,7 @@ create table if not exists search (
     query text not null,
     app_user_id text not null,
     executed_at timestamp default current_timestamp,
-    foreign key (app_user_id) references app_user(id)
+    foreign key (app_user_id) references app_user(id) on delete cascade
 );
 
 create index if not exists search_query on search(query);
@@ -52,8 +52,8 @@ create table if not exists search_result (
     video_youtube_id text not null,
     -- rank of search result for maintain order is inferred from 
     -- insertion order
-    foreign key (search_id) references search(id),
-    foreign key (video_youtube_id) references video(youtube_id),
+    foreign key (search_id) references search(id) on delete cascade,
+    foreign key (video_youtube_id) references video(youtube_id) on delete cascade,
     unique (search_id, video_youtube_id)
 );
 

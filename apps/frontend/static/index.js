@@ -1,22 +1,23 @@
+import * as api from "./api.js"
+import * as utils from "./utils.js"
+import * as navbar from "./navbar.js"
+
+if (utils.getBearerToken() == null) {
+  window.location.href = "/login.html"
+}
+
 document.getElementById("search").addEventListener("submit", async function(event) {
   event.preventDefault()
   const resultsDiv = document.getElementById("search_results")
+  resultsDiv.textContent = ""
   const query = document.getElementById("query").value
 
   try {
-    // TODO: Throw the URL of this endpoint in an environment variable
-    const response = await fetch(
-      `http://localhost:8000/videos?q=${encodeURIComponent(query)}`, 
-      { 
-        method: "GET",
-        headers: {
-          "Authorization": "Bearer 220fcc94-7a9a-45c2-bd1e-b54e70d6842e"
-        }
-      }
-    )
+    const response = await api.searchVideos(query)
 
     if (!response.ok) {
-      console.log(`HTTP error, status ${response.status}`)
+      const errorElement = document.getElementsByClassName("error")[0]
+      errorElement.textContent = `:( (${response.status})`
     }
 
     const data = await response.json()
@@ -37,7 +38,9 @@ function createSearchResult(video) {
   const resultItem = document.createElement("div")
   resultItem.setAttribute("class", "search_result")
   resultItem.setAttribute("onclick", `window.open('${video.link}', 'mywindow')`)
-  resultItem.textContent = `${video.title} - ${video.channel_title}`
+  resultItem.textContent = `${decodeURIComponent(video.title)} - 
+${decodeURIComponent(video.channel_title)}`
+  console.log(video.title)
 
   return resultItem
 }

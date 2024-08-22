@@ -3,7 +3,6 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"html"
 	xyoutube "maestro/internal/youtube"
 	"strings"
 )
@@ -20,9 +19,9 @@ published_at, youtube_link, duration_seconds, view_count) values`,
 		s := fmt.Sprintf(
 			`('%s', '%s', '%s', '%s', '%s', '%s', %d, %d),`,
 			video.Id,
-			html.EscapeString(video.Title),
-			html.EscapeString(video.ChannelTitle),
-			html.EscapeString(video.Description),
+			strings.ReplaceAll(video.Title, "'", "''"),
+			strings.ReplaceAll(video.ChannelTitle, "'", "''"),
+			strings.ReplaceAll(video.Description, "'", "''"),
 			// TODO: Need to convert this string to a SQLite datetime
 			video.PublishedAt,
 			video.Link,

@@ -2,6 +2,7 @@ package youtube
 
 import (
 	"fmt"
+	"html"
 	"time"
 
 	"github.com/ayaviri/goutils/timer"
@@ -105,11 +106,13 @@ func SearchVideosByQuery(
 					videos = append(
 						videos,
 						Video{
-							Id:           videoIds[index],
-							Title:        searchSnippet.Title,
-							ChannelTitle: searchSnippet.ChannelTitle,
-							Description:  searchSnippet.Description,
-							PublishedAt:  searchSnippet.PublishedAt,
+							Id:    videoIds[index],
+							Title: html.UnescapeString(searchSnippet.Title),
+							ChannelTitle: html.UnescapeString(
+								searchSnippet.ChannelTitle,
+							),
+							Description: html.UnescapeString(searchSnippet.Description),
+							PublishedAt: searchSnippet.PublishedAt,
 							Link: fmt.Sprintf(
 								"https://www.youtube.com/watch?v=%s", videoIds[index],
 							),

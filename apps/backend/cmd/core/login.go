@@ -23,7 +23,7 @@ type UserLoginRequestBody struct {
 }
 
 type UserLoginResponseBody struct {
-	Token string `json:"token"`
+	BearerToken string `json:"bearer_token"`
 }
 
 //  _   _    _    _   _ ____  _     _____ ____  ____
@@ -54,22 +54,14 @@ func LoginResourceHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	var responseBody []byte
+	var bearerToken string
 
 	timer.WithTimer("verifying user credentials", func() {
-		var bearerToken string
 		bearerToken, err = xdb.AuthenticateAndGenerateToken(
 			db,
 			requestBody.Username,
 			requestBody.Password,
 		)
-
-		if err != nil {
-			return
-		}
-
-		response := UserLoginResponseBody{Token: bearerToken}
-		responseBody, err = json.Marshal(response)
 	})
 
 	if err != nil {
@@ -81,5 +73,28 @@ func LoginResourceHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	writer.Write(responseBody)
+	var responseJson []byte
+	responseJson, err = json.Marshal(UserLoginResponseBody{BearerToken: bearerToken})
+
+	if err != nil {
+		http.Error(
+			writer,
+			fmt.Sprintf("Could not marshal response body to JSON: %v\n", err),
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	writer.Write(responseJson)
+	// http.SetCookie(
+	// 	writer,
+	// 	&http.Cookie{
+	// 		Name:     "bearer_token",
+	// 		Value:    bearerToken,
+	// 		MaxAge:   0,
+	// 		Secure:   true,
+	// 		HttpOnly: true,
+	// 		SameSite: http.SameSiteStrictMode,
+	// 	},
+	// )
 }

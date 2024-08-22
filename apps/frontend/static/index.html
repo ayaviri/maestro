@@ -7,23 +7,27 @@
   <meta name="author" content="">
   <meta name="description" content="">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="styles.css" rel="stylesheet">
+  <link href="global.css" rel="stylesheet">
 
 </head>
 
 <body>
-  <div id="app_container">
-    <h1>musica, <span id="maestro">maestro</span></h1>
-    <form id="search">
-      <input type="text" id="query" placeholder="search for songs here..." required></input>
-      <input type="submit" value="enter"></button>
-    </form>
+  <hamburger-menu></hamburger-menu>
+
+  <div id="full_container">
+    <div id="header_container">
+      <h1>musica, <span id="maestro">maestro</span></h1>
+      <form id="search">
+        <input type="text" id="query" placeholder="search for songs here..." required>
+        <input type="submit" id="search_submit" value="enter">
+      </form>
+    </div>
 
     <div id="search_results">
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script type="module" src="index.js"></script>
 </body>
 
 </html>

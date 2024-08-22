@@ -1,0 +1,150 @@
+body {
+    background-color: black;
+    font-family: serif;
+    font-size: 24px;
+    color: white;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+}
+
+#menu_toggle {
+  position: fixed;
+  width: 80px;
+  height: 80px;
+  top: 0;
+  left: 0;
+  cursor: pointer;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#hamburger {
+  width: 40px;
+  height: 4px;
+  background-color: tan;
+  position: relative;
+}
+
+#hamburger::before, #hamburger::after {
+  content: '';
+  position: absolute;
+  width: 40px;
+  height: 4px;
+  background-color: tan;
+}
+
+#hamburger::before {
+  top: -10px;
+}
+
+#hamburger::after {
+  top: 10px;
+}
+
+#menu {
+  position: fixed;
+  top: 80px;
+  left: -250px;
+  width: 250px;
+  height: 100vh;
+  transition: left 0.3s ease-in-out;
+  z-index: 999;
+}
+
+#menu.active {
+  left: 0;
+}
+
+#menu ul {
+  list-style-type: none;
+  margin: 0px;
+  padding-left: 20px;
+}
+
+#menu a {
+  color: tan;
+  text-decoration: none;
+}
+
+#maestro {
+  color: tan;
+}
+
+#full_container {
+  height: 100vh;
+  width: 75%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center; 
+}
+
+#header_container {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center; 
+}
+
+#search_results {
+  margin: 1.5em;
+  display: flex;
+  flex-direction: column;
+}
+
+#search {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+.register_label {
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.register_input {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+input {
+  height: 36px;
+  font-family: serif;
+  font-size: 18px;
+  padding-left: 6px;
+  padding-right: 6px;
+  box-sizing: border-box;
+  flex-grow: 1;
+}
+
+::placeholder {
+  color: gray;
+}
+
+input[type=submit] {
+  background-color: tan;
+  border-color: tan;
+  cursor: pointer;
+}
+
+#register_submit {
+  margin-top: 4px;
+}
+
+.search_result:hover {
+  cursor: pointer;
+  color: tan;
+}
+
+.error {
+  color: red;
+}
