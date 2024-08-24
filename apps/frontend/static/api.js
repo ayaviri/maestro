@@ -65,3 +65,33 @@ export async function addToCart(videoId) {
 
   return response
 }
+
+export async function removeFromCart(videoId) {
+  const bearerToken = utils.getBearerToken()
+  const response = await fetch(
+    `http://localhost:8000/cart?v=${videoId}`, 
+    { 
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${bearerToken}`
+      }
+    }
+  )
+
+  return response
+}
+
+export async function getCartItems() {
+  const bearerToken = utils.getBearerToken()
+  const response = await fetch(
+    `http://localhost:8000/cart`, 
+    { 
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${bearerToken}`
+      }
+    }
+  )
+
+  return response
+}

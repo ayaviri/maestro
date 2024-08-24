@@ -89,7 +89,7 @@ body {
   align-items: center; 
 }
 
-#search_results {
+#search_results, #cart_items {
   margin: 1.5em;
   width: 100%;
   display: flex;
@@ -141,19 +141,19 @@ input[type=submit] {
   margin-top: 4px;
 }
 
-.search_result {
+.search_result, .cart_item {
   width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.search_result_title:hover {
+.search_result_title:hover, .cart_item_title:hover {
   cursor: pointer;
   color: tan;
 }
 
-.add_to_cart {
+.add_to_cart, .remove_from_cart {
   color: tan;
   cursor: pointer;
 }
