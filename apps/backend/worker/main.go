@@ -119,7 +119,7 @@ func main() {
 
 				for index, fileName := range fileNames {
 					fileDownloadPaths[index] = path.Join(
-						cartDownloadDirectory,
+						requestMessage.JobId,
 						fileName,
 					)
 				}

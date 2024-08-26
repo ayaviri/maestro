@@ -28,13 +28,20 @@ func DownloadResourceHandler(writer http.ResponseWriter, request *http.Request) 
 	}
 
 	defer response.Body.Close()
-	writer.WriteHeader(response.StatusCode)
+
+	for key, _ := range response.Header {
+		writer.Header().Del(key)
+	}
 
 	for key, values := range response.Header {
 		for _, value := range values {
 			writer.Header().Add(key, value)
 		}
 	}
+
+	writer.Header().Add(
+		"Content-Disposition", fmt.Sprintf(" attachment; filename='%s'", filePath),
+	)
 
 	_, err = io.Copy(writer, response.Body)
 

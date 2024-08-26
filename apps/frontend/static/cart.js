@@ -1,9 +1,34 @@
 import * as navbar from "./navbar.js"
 import * as api from "./api.js"
+import * as redirect from "./redirect.js"
+
+
+//   ___  _   _   ____   _    ____ _____   _     ___    _    ____  
+//  / _ \| \ | | |  _ \ / \  / ___| ____| | |   / _ \  / \  |  _ \ 
+// | | | |  \| | | |_) / _ \| |  _|  _|   | |  | | | |/ _ \ | | | |
+// | |_| | |\  | |  __/ ___ \ |_| | |___  | |__| |_| / ___ \| |_| |
+//  \___/|_| \_| |_| /_/   \_\____|_____| |_____\___/_/   \_\____/ 
+//                                                                 
+
+redirect.unauthorisedUsers()
+
+//  _______     _______ _   _ _____ 
+// | ____\ \   / / ____| \ | |_   _|
+// |  _|  \ \ / /|  _| |  \| | | |  
+// | |___  \ V / | |___| |\  | | |  
+// |_____|  \_/  |_____|_| \_| |_|  
+//                                  
+//  _     ___ ____ _____ _____ _   _ _____ ____  ____  
+// | |   |_ _/ ___|_   _| ____| \ | | ____|  _ \/ ___| 
+// | |    | |\___ \ | | |  _| |  \| |  _| | |_) \___ \ 
+// | |___ | | ___) || | | |___| |\  | |___|  _ < ___) |
+// |_____|___|____/ |_| |_____|_| \_|_____|_| \_\____/ 
+//                                                     
 
 document.addEventListener("DOMContentLoaded", async function(event) {
   event.preventDefault()
   const cartItemsDiv = document.getElementById("cart_items")
+  const checkoutButton = document.getElementById("checkout")
   const response = await api.getCartItems()
 
   if (!response.ok) {
@@ -17,9 +42,14 @@ document.addEventListener("DOMContentLoaded", async function(event) {
     cartItems.forEach((cartItem) => {
       cartItemsDiv.appendChild(createCartItem(cartItem))
     })
+    checkoutButton.removeAttribute("hidden")
   } else {
     cartItemsDiv.textContent = "no items in cart :("
   }
+})
+
+document.getElementById("checkout").addEventListener("click", async function(event) {
+  const response = await api.checkout(() => console.log("checkout failed"))
 })
 
 function createCartItem(cartItem) {

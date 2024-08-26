@@ -77,9 +77,11 @@ func initialiseServer() {
 	authMiddlewareFactory := xhttp.BearerTokenAuthMiddlewareFactory{DB: db}
 	loggingHandler := xhttp.NewLoggingHandler(os.Stdout)
 	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:3000"},
 		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodDelete},
 		AllowedHeaders:   []string{"*"},
 		AllowCredentials: true,
+		ExposedHeaders:   []string{"Content-Disposition"},
 	})
 
 	http.Handle(
@@ -111,19 +113,23 @@ func initialiseServer() {
 	http.Handle(
 		"/checkout",
 		loggingHandler(
-			authMiddlewareFactory.New(http.HandlerFunc(CheckoutResourceHandler)),
+			c.Handler(
+				authMiddlewareFactory.New(http.HandlerFunc(CheckoutResourceHandler)),
+			),
 		),
 	)
 	http.Handle(
 		"/job/",
 		loggingHandler(
-			authMiddlewareFactory.New(http.HandlerFunc(JobResourceHandler)),
+			c.Handler(http.HandlerFunc(JobResourceHandler)),
 		),
 	)
 	http.Handle(
 		"/download/",
 		loggingHandler(
-			authMiddlewareFactory.New(http.HandlerFunc(DownloadResourceHandler)),
+			c.Handler(
+				http.HandlerFunc(DownloadResourceHandler),
+			),
 		),
 	)
 	// TODO: Need to introduce TLS here

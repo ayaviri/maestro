@@ -95,3 +95,57 @@ export async function getCartItems() {
 
   return response
 }
+
+export async function checkout(errorCallback) {
+  const bearerToken = utils.getBearerToken()
+  const response = await fetch(
+    `http://localhost:8000/checkout`,
+    {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${bearerToken}`,
+      }
+    }
+  )
+
+  if (!response.ok) {
+    errorCallback()
+    return
+  }
+
+  const jobId = (await response.json()).job_id
+  const eventSource = new EventSource(`http://localhost:8000/job/${jobId}`)
+  eventSource.addEventListener("urls", function(event) {
+    const message = JSON.parse(event.data)
+    eventSource.close()
+
+    message.download_urls.forEach(async function(url) {
+      try {
+        const response = await fetch(`http://localhost:8000/download/${url}`, {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${bearerToken}`,
+          }
+        })
+
+        if (!response.ok) {
+          console.log(":(")
+          return
+        }
+
+        const blob = await response.blob()
+        const downloadUrl = window.URL.createObjectURL(blob)
+        const filename = response.headers.get("Content-Disposition").split(";")[1].trim().match("filename='(.*)'")[1]
+        const downloadButton = document.createElement("a")
+        downloadButton.href = downloadUrl
+        downloadButton.download = filename
+        document.body.appendChild(downloadButton)
+        downloadButton.click()
+        downloadButton.remove()
+        window.URL.revokeObjectURL(downloadUrl)
+      } catch (error) {
+        console.log(error)
+      }
+    })
+  })
+}

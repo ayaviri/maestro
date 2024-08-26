@@ -133,11 +133,18 @@ input {
   color: gray;
 }
 
-input[type=submit] {
+input[type=submit], button {
   background-color: tan;
+  font-family: serif;
   border-color: tan;
   cursor: pointer;
 }
+
+#checkout {
+  margin-left: auto;
+  font-size: 20px;
+}
+
 
 #register_submit {
   margin-top: 4px;
