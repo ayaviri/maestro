@@ -89,6 +89,10 @@ body {
   align-items: center; 
 }
 
+#keybindings {
+  color: tan;
+}
+
 #search_results, #cart_items {
   margin: 1.5em;
   max-height: 400px;

@@ -151,7 +151,6 @@ func awaitCheckoutCompletionMessage(
 				delivery.Reject(true)
 			}
 		case <-clientDisconnected:
-			close(terminationChannel)
 			return
 		}
 	}

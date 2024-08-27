@@ -2,6 +2,7 @@ import * as navbar from "./navbar.js"
 import * as api from "./api.js"
 import * as redirect from "./redirect.js"
 import * as components from "./components.js"
+import * as keybindings from "./globalKeybindings.js"
 
 
 //   ___  _   _   ____   ____ ____  ___ ____ _____   _     ___    _    ____  
@@ -62,6 +63,7 @@ document.getElementById("checkout").addEventListener("click", async function(eve
   const checkoutButton = document.getElementById("checkout")
   checkoutButton.disabled = true
   const errorElement = document.getElementById("error")
+  errorElement.textContent = ""
   let response
 
   try {

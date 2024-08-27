@@ -1,6 +1,7 @@
 import * as api from "./api.js"
 import * as redirect from "./redirect.js"
 import * as navbar from "./navbar.js"
+import * as globalKeybindings from "./globalKeybindings.js"
 
 document.getElementById("login").addEventListener("submit", async function(event) {
   event.preventDefault()

@@ -16,17 +16,23 @@
 
   <div id="full_container">
     <div id="header_container">
-      <h1>musica, <span id="maestro">maestro</span></h1>
-      <form id="search">
-        <input type="text" id="query" placeholder="search for songs here..." required>
-        <input type="submit" id="search_submit" value="enter">
-      </form>
+      <h1>keybindings, <span id="maestro">maestro</span></h1>
     </div>
 
-    <p id="error"></p>
-    <div id="search_results">
+    <div id="keybindings">
+      <h2>global</h2>
+      <ul>
+        <li>m - toggle menu (when search bar is not active)</li>
+        <li>j - next menu item (when menu is active)</li>
+        <li>k - previous menu item (when menu is active)</li>
+      </ul>
+      <h2>home page</h2>
+      <ul>
+        <li>/ - toggle search bar</li>
+      </ul>
     </div>
   </div>
+
 
   <script type="module" src="index.js"></script>
 </body>

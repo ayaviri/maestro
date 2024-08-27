@@ -3,6 +3,7 @@ import * as utils from "./utils.js"
 import * as navbar from "./navbar.js"
 import * as redirect from "./redirect.js"
 import * as components from "./components.js"
+import * as keybindings from "./globalKeybindings.js"
 
 
 //   ___  _   _   ____   ____ ____  ___ ____ _____   _     ___    _    ____  
@@ -27,9 +28,18 @@ redirect.unauthorisedUsers()
 // |_____|___|____/ |_| |_____|_| \_|_____|_| \_\____/ 
 //                                                     
 
+
 document.addEventListener("keyup", function(event) {
   if (event.key == "/") {
-    document.getElementById("query").focus()
+    const queryInput = document.getElementById("query")
+
+    if (keybindings.noTextInputInFocus()) {
+      queryInput.focus()
+    } else {
+      const currentQuery = queryInput.value
+      queryInput.value = currentQuery.substring(0, currentQuery.length - 1)
+      queryInput.blur()
+    }
   }
 })
 
@@ -37,6 +47,8 @@ document.getElementById("search").addEventListener("submit", async function(even
   event.preventDefault()
   const resultsDiv = document.getElementById("search_results")
   resultsDiv.textContent = ""
+  const errorElement = document.getElementById("error")
+  errorElement.textContent = ""
   const query = document.getElementById("query").value
 
   const promises = [api.searchVideos(query), api.getCartItems()]
@@ -60,7 +72,7 @@ document.getElementById("search").addEventListener("submit", async function(even
       resultsDiv.appendChild(createSearchResult(video, cartItems))
     })
   } else {
-    resultsDiv.textContent = "no results found :("
+    errorElement.textContent = "no results found :("
   }
 })
 
