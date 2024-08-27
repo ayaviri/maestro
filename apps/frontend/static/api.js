@@ -121,7 +121,7 @@ export async function checkout(errorCallback) {
 
     message.download_urls.forEach(async function(url) {
       try {
-        const response = await fetch(`http://localhost:8000/download/${url}`, {
+        const response = await fetch(url, {
           method: "GET",
           headers: {
             "Authorization": `Bearer ${bearerToken}`,

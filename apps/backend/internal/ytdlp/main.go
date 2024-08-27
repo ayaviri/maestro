@@ -8,8 +8,11 @@ import (
 
 var err error
 
-// Downloads the given list of videos nested somewhere in the given directory,
-// returning the list of downloaded file NAMES (eg. song.mp3)
+// Downloads the given list of videos into the given download directory.
+// Returns a list of the written file paths (includes given download directory
+// and file name)
+// For example, if given "foo" as the download directory, list might contain
+// [foo/bar.mp3 foo/baz.mp3]
 func DownloadVideos(v []xyoutube.Video, downloadDirectory string) ([]string, error) {
 	videoLinks := make([]string, 0)
 
@@ -24,12 +27,14 @@ func DownloadVideos(v []xyoutube.Video, downloadDirectory string) ([]string, err
 			"-x",
 			"-P",
 			downloadDirectory,
-			"--print",
-			outputTemplate,
 			"-o",
 			outputTemplate,
+			"--quiet",
 			"--no-simulate",
 			"--no-warnings",
+			"--restrict-filenames",
+			"--exec",
+			"echo %(filename)q",
 		},
 		videoLinks...,
 	)

@@ -12,8 +12,8 @@ import (
 )
 
 // Reads the cart for the given user and downloads in into the given
-// directory (path from project root). Returns a list of downloaded file
-// NAMES (eg. song.mp3)
+// directory (path from project root). See purpose statement of
+// xytdlp.DownloadVideos for return value
 func DownloadCart(
 	db *sql.DB,
 	userId string,

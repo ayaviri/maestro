@@ -9,6 +9,7 @@ import (
 	xdb "maestro/internal/db"
 	xworker "maestro/internal/worker"
 	"path"
+	"strings"
 	"sync"
 
 	"github.com/ayaviri/goutils/timer"
@@ -100,7 +101,7 @@ func main() {
 				d,
 			)
 
-			var fileDownloadPaths []string
+			var downloadUrls []string
 
 			timer.WithTimer("downloading cart contents", func() {
 				// TODO: The download directory needs to be pulled into
@@ -109,19 +110,19 @@ func main() {
 				var cartDownloadDirectory string = path.Join(
 					"downloads", requestMessage.JobId,
 				)
-				var fileNames []string
-				fileNames, err = DownloadCart(
+				var filePaths []string
+				filePaths, err = DownloadCart(
 					db,
 					requestMessage.UserId,
 					cartDownloadDirectory,
 				)
-				fileDownloadPaths = make([]string, len(fileNames))
+				downloadUrls = make([]string, len(filePaths))
 
-				for index, fileName := range fileNames {
-					fileDownloadPaths[index] = path.Join(
-						requestMessage.JobId,
-						fileName,
-					)
+				for index, filePath := range filePaths {
+					// TODO: The address to the file server should also
+					// be an environment variable
+					stripped := strings.TrimPrefix(filePath, "downloads/")
+					downloadUrls[index] = "http://localhost:8000/download/" + stripped
 				}
 
 				xworker.RejectOnError(err, "Failed to download cart contents", d)
@@ -134,7 +135,7 @@ func main() {
 				completionMessage, err = json.Marshal(
 					xworker.CheckoutCompletionMessage{
 						JobId:        requestMessage.JobId,
-						DownloadUrls: fileDownloadPaths,
+						DownloadUrls: downloadUrls,
 					},
 				)
 				xworker.RejectOnError(

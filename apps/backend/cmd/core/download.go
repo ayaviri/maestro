@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path"
 	"strings"
 )
 
@@ -28,6 +29,8 @@ func DownloadResourceHandler(writer http.ResponseWriter, request *http.Request) 
 	}
 
 	defer response.Body.Close()
+	var fileName string
+	_, fileName = path.Split(request.URL.Path)
 
 	for key, _ := range response.Header {
 		writer.Header().Del(key)
@@ -40,7 +43,7 @@ func DownloadResourceHandler(writer http.ResponseWriter, request *http.Request) 
 	}
 
 	writer.Header().Add(
-		"Content-Disposition", fmt.Sprintf(" attachment; filename='%s'", filePath),
+		"Content-Disposition", fmt.Sprintf(" attachment; filename='%s'", fileName),
 	)
 
 	_, err = io.Copy(writer, response.Body)
