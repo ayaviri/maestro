@@ -15,8 +15,7 @@ export async function registerUser(email, username, password) {
 
 // 1) Hits the /login endpoint on the backend
 // 2) Places the bearer token in the response body into localStorage
-// 3a) Calls the given error callback upon failure
-// 3b) Or redirects to the home page upon success
+// 3) Redirects to the home page upon success
 export async function loginUser(username, password, errorCallback) {
   const loginForm = { username, password }
   const response = await fetch(
@@ -28,7 +27,7 @@ export async function loginUser(username, password, errorCallback) {
   )
 
   if (!response.ok) {
-    errorCallback()
+    throw new Error("login failed")
   } else {
     const data = await response.json()
     localStorage.setItem(utils.LS_BEARER_TOKEN, data.bearer_token)
@@ -96,7 +95,7 @@ export async function getCartItems() {
   return response
 }
 
-export async function checkout(errorCallback) {
+export async function checkout() {
   const bearerToken = utils.getBearerToken()
   const response = await fetch(
     `http://localhost:8000/checkout`,
@@ -108,44 +107,57 @@ export async function checkout(errorCallback) {
     }
   )
 
-  if (!response.ok) {
+  return response
+}
+
+// Downloads all songs in the message body, removing the successful downloads
+// from the cart
+export async function downloadSongsUponCompletion(event, connection, errorCallback) {
+  const message = JSON.parse(event.data)
+  connection.close()
+  console.log(message.download_urls)
+
+  try {
+    const downloadPromises = await Promise.all(
+      message.download_urls.map((url) => _downloadSong(url))
+    )
+  } catch (error) {
     errorCallback()
-    return
+  }
+}
+
+// Requests the given URL and downloads the response body as a blob
+// using the filename in the Content-Disposition header
+async function _downloadSong(url) {
+  const bearerToken = utils.getBearerToken()
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${bearerToken}`,
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error("file not found")
   }
 
-  const jobId = (await response.json()).job_id
-  const eventSource = new EventSource(`http://localhost:8000/job/${jobId}`)
-  eventSource.addEventListener("urls", function(event) {
-    const message = JSON.parse(event.data)
-    eventSource.close()
+  const blobUrl = window.URL.createObjectURL(await response.blob())
+  console.log(blobUrl)
+  const downloadButton = document.createElement("a")
+  downloadButton.setAttribute("id", blobUrl)
+  downloadButton.href = blobUrl
+  downloadButton.download = _getFilenameFromResponseHeader(response)
+  document.body.appendChild(downloadButton)
+  downloadButton.click()
+  downloadButton.remove()
+  window.URL.revokeObjectURL(blobUrl)
+}
 
-    message.download_urls.forEach(async function(url) {
-      try {
-        const response = await fetch(url, {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${bearerToken}`,
-          }
-        })
+function _getFilenameFromResponseHeader(response) {
+  const contentDispositionHeader = response.headers.get("Content-Disposition")
+  // "attachment; filename='file.ext'" => "file.ext"
+  const filename = contentDispositionHeader.split(";")[1].trim().match("filename='(.*)'")[1]
+  console.log(filename)
 
-        if (!response.ok) {
-          console.log(":(")
-          return
-        }
-
-        const blob = await response.blob()
-        const downloadUrl = window.URL.createObjectURL(blob)
-        const filename = response.headers.get("Content-Disposition").split(";")[1].trim().match("filename='(.*)'")[1]
-        const downloadButton = document.createElement("a")
-        downloadButton.href = downloadUrl
-        downloadButton.download = filename
-        document.body.appendChild(downloadButton)
-        downloadButton.click()
-        downloadButton.remove()
-        window.URL.revokeObjectURL(downloadUrl)
-      } catch (error) {
-        console.log(error)
-      }
-    })
-  })
+  return filename
 }

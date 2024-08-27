@@ -71,3 +71,16 @@ func GetItemsFromCart(db *sql.DB, userId string) ([]xyoutube.Video, error) {
 
 	return cartItems, nil
 }
+
+func GetItemCountFromCart(db *sql.DB, userId string) (int64, error) {
+	count, err := QueryCount(
+		db,
+		fmt.Sprintf("select count(*) from cart_item where app_user_id = '%s'", userId),
+	)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}

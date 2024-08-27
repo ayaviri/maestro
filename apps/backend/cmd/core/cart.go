@@ -67,6 +67,10 @@ type GetCartResponseBody struct {
 	CartItems []xyoutube.Video `json:"cart_items"`
 }
 
+type RemoveFromCartResponseBody struct {
+	RemainingCount int64 `json:"remaining_count"`
+}
+
 //  _   _    _    _   _ ____  _     _____ ____  ____
 // | | | |  / \  | \ | |  _ \| |   | ____|  _ \/ ___|
 // | |_| | / _ \ |  \| | | | | |   |  _| | |_) \___ \
@@ -95,8 +99,16 @@ func removeFromCartHandler(
 		return
 	}
 
+	var remainingItemCount int64
+
 	timer.WithTimer("removing video from cart", func() {
 		err = xdb.RemoveItemFromCart(db, user.Id, videoId)
+
+		if err != nil {
+			return
+		}
+
+		remainingItemCount, err = xdb.GetItemCountFromCart(db, user.Id)
 	})
 
 	if err != nil {
@@ -107,6 +119,24 @@ func removeFromCartHandler(
 		)
 		return
 	}
+
+	var responseBody []byte
+
+	timer.WithTimer("marshalling response to JSON", func() {
+		response := RemoveFromCartResponseBody{RemainingCount: remainingItemCount}
+		responseBody, err = json.Marshal(response)
+	})
+
+	if err != nil {
+		http.Error(
+			writer,
+			fmt.Sprintf("Could not marshal response to JSON: %v\n", err.Error()),
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	writer.Write(responseBody)
 }
 
 func addToCartHandler(

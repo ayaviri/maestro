@@ -7,5 +7,10 @@ document.getElementById("login").addEventListener("submit", async function(event
   const username = document.getElementById("username").value
   const password = document.getElementById("password").value
 
-  await api.loginUser(username, password, redirect.toLoginPage)
+  try {
+    await api.loginUser(username, password)
+  } catch (error) {
+    const errorElement = document.getElementById("error")
+    errorElement.textContent = "login failed :("
+  }
 })

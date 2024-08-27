@@ -2,14 +2,15 @@ import * as api from "./api.js"
 import * as utils from "./utils.js"
 import * as navbar from "./navbar.js"
 import * as redirect from "./redirect.js"
+import * as components from "./components.js"
 
 
-//   ___  _   _   ____   _    ____ _____   _     ___    _    ____  
-//  / _ \| \ | | |  _ \ / \  / ___| ____| | |   / _ \  / \  |  _ \ 
-// | | | |  \| | | |_) / _ \| |  _|  _|   | |  | | | |/ _ \ | | | |
-// | |_| | |\  | |  __/ ___ \ |_| | |___  | |__| |_| / ___ \| |_| |
-//  \___/|_| \_| |_| /_/   \_\____|_____| |_____\___/_/   \_\____/ 
-//                                                                 
+//   ___  _   _   ____   ____ ____  ___ ____ _____   _     ___    _    ____  
+//  / _ \| \ | | / ___| / ___|  _ \|_ _|  _ \_   _| | |   / _ \  / \  |  _ \ 
+// | | | |  \| | \___ \| |   | |_) || || |_) || |   | |  | | | |/ _ \ | | | |
+// | |_| | |\  |  ___) | |___|  _ < | ||  __/ | |   | |__| |_| / ___ \| |_| |
+//  \___/|_| \_| |____/ \____|_| \_\___|_|    |_|   |_____\___/_/   \_\____/ 
+//                                                                           
 
 redirect.unauthorisedUsers()
 
@@ -71,7 +72,6 @@ document.getElementById("search").addEventListener("submit", async function(even
 // |_| |_|_____|_____|_|   |_____|_| \_\____/ 
 //                                            
 
-const MAX_LENGTH_CHARS = 50
 // These two constants represent the faces of the buttons
 // for toggling a search result's presense in the user's cart
 const IN_CART = ":)"
@@ -80,21 +80,12 @@ const NOT_IN_CART = "+"
 function createSearchResult(video, cartItems) {
   const container = document.createElement("div")
   container.setAttribute("class", "search_result")
-  container.appendChild(createSearchResultTitle(video))
+  const title = `${decodeURIComponent(video.title)} - 
+${decodeURIComponent(video.channel_title)}`
+  container.appendChild(components.createTitleCard(title, video.link, "search_result_title"))
   container.appendChild(createAddToCartButton(video, cartItems))
 
   return container
-}
-
-function createSearchResultTitle(video) {
-  const resultTitle = document.createElement("div")
-  resultTitle.setAttribute("class", "search_result_title")
-  resultTitle.setAttribute("onclick", `window.open('${video.link}', 'mywindow')`)
-  const title = `${decodeURIComponent(video.title)} - 
-${decodeURIComponent(video.channel_title)}`
-  resultTitle.textContent = title.length > MAX_LENGTH_CHARS ? title.slice(0, MAX_LENGTH_CHARS) + "..." : title
-
-  return resultTitle
 }
 
 function createAddToCartButton(video, cartItems) {

@@ -34,7 +34,7 @@ create table if not exists cart_item (
     unique(app_user_id, video_youtube_id)
 );
 
--- TODO: Add index on cart ID
+create index if not exists cart_item_app_user_id on cart_item(app_user_id);
 
 create table if not exists search (
     id text primary key, -- uuid string

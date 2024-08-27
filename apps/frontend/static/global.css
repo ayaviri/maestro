@@ -145,6 +145,9 @@ input[type=submit], button {
   font-size: 20px;
 }
 
+#checkout:disabled {
+  cursor: wait;
+}
 
 #register_submit {
   margin-top: 4px;
@@ -167,6 +170,6 @@ input[type=submit], button {
   cursor: pointer;
 }
 
-.error {
-  color: red;
+#error {
+  color: red; 
 }
