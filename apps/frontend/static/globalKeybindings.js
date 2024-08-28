@@ -1,23 +1,26 @@
-let currentFocusIndex = -1
 const menu = document.getElementById("menu")
-const menuLinks = document.getElementsByClassName("menu_link")
+const menuFocusParams = {
+  focusIndex: -1,
+  items: document.getElementsByClassName("menu_link")
+}
 
 document.addEventListener("keyup", function(event) {
+
   if (event.key == "m" && noTextInputInFocus()) {
     menu.classList.toggle("active")
 
     if (menu.classList.contains("active")) {
-      currentFocusIndex = -1
-      focusNextItem()
+      menuFocusParams.focusIndex = -1
+      focusNext(menuFocusParams)
     }
   }
 
   if (event.key == "j" && menu.classList.contains("active")) {
-    focusNextItem()
+    focusNext(menuFocusParams)
   }
 
   if (event.key == "k" && menu.classList.contains("active")) {
-    focusPreviousItem()
+    focusPrevious(menuFocusParams)
   }
 })
 
@@ -27,22 +30,22 @@ export function noTextInputInFocus() {
     document.activeElement.type != "text"
 }
 
-function focusNextItem() {
-  if (currentFocusIndex < menuLinks.length - 1) {
-    currentFocusIndex++
+export function focusNext(params) {
+  if (params.focusIndex < params.items.length - 1) {
+    params.focusIndex++
   } else {
-    currentFocusIndex = 0
+    params.focusIndex = 0
   }
 
-  menuLinks[currentFocusIndex].focus()
+  params.items[params.focusIndex].focus()
 }
 
-function focusPreviousItem() {
-  if (currentFocusIndex == 0) {
-    currentFocusIndex = menuLinks.length - 1
+export function focusPrevious(params) {
+  if (params.focusIndex == 0) {
+    params.focusIndex = params.items.length - 1
   } else {
-    currentFocusIndex--
+    params.focusIndex--
   }
 
-  menuLinks[currentFocusIndex].focus()
+  params.items[params.focusIndex].focus()
 }

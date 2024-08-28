@@ -28,6 +28,10 @@ redirect.unauthorisedUsers()
 // |_____|___|____/ |_| |_____|_| \_|_____|_| \_\____/ 
 //                                                     
 
+const searchResultFocusParams = {
+  focusIndex: -1,
+  items: document.getElementsByClassName("search_result")
+}
 
 document.addEventListener("keyup", function(event) {
   if (event.key == "/") {
@@ -40,6 +44,44 @@ document.addEventListener("keyup", function(event) {
       queryInput.value = currentQuery.substring(0, currentQuery.length - 1)
       queryInput.blur()
     }
+  }
+
+  const menu = document.getElementById("menu")
+
+  if (
+    event.key == "j" && 
+    !menu.classList.contains("active") && 
+    searchResultFocusParams.items.length > 0 &&
+    keybindings.noTextInputInFocus()
+  ) {
+    keybindings.focusNext(searchResultFocusParams)
+  }
+
+  if (
+    event.key == "k" && 
+    !menu.classList.contains("active") && 
+    searchResultFocusParams.items.length > 0 &&
+    keybindings.noTextInputInFocus()
+  ) {
+    keybindings.focusPrevious(searchResultFocusParams)
+  }
+
+  if (
+    event.key == "o" && 
+    document.activeElement &&
+    document.activeElement.className == "search_result"
+  ) {
+    const searchResultTitle = document.activeElement.getElementsByClassName("search_result_title")[0]
+    searchResultTitle.click()
+  }
+
+  if (
+    event.key == "c" && 
+    document.activeElement &&
+    document.activeElement.className == "search_result"
+  ) {
+    const addToCartButton = document.activeElement.getElementsByClassName("add_to_cart")[0]
+    addToCartButton.click()
   }
 })
 
@@ -92,6 +134,7 @@ const NOT_IN_CART = "+"
 function createSearchResult(video, cartItems) {
   const container = document.createElement("div")
   container.setAttribute("class", "search_result")
+  container.setAttribute("tabindex", "0")
   const title = `${decodeURIComponent(video.title)} - 
 ${decodeURIComponent(video.channel_title)}`
   container.appendChild(components.createTitleCard(title, video.link, "search_result_title"))
