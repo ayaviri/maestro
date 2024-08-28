@@ -65,9 +65,13 @@ body {
   padding-left: 20px;
 }
 
-#menu a {
+.menu_link {
   color: tan;
   text-decoration: none;
+}
+
+:focus {
+  outline-offset: -5px;
 }
 
 #maestro {
@@ -110,12 +114,12 @@ body {
   margin: 0;
 }
 
-.register_label {
+.form_label {
   margin-top: 4px;
   margin-bottom: 4px;
 }
 
-.register_input {
+.form_input {
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -153,7 +157,7 @@ input[type=submit], button {
   cursor: wait;
 }
 
-#register_submit {
+#form_submit {
   margin-top: 4px;
 }
 

@@ -3,7 +3,6 @@ create table if not exists app_user (
     username text not null unique,
     password_hash text not null,
     token text unique,
-    email text unique,
     token_created_at timestamp,
     created_at timestamp default current_timestamp,
     last_login timestamp

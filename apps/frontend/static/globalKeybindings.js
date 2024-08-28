@@ -5,7 +5,6 @@ const menuFocusParams = {
 }
 
 document.addEventListener("keyup", function(event) {
-
   if (event.key == "m" && noTextInputInFocus()) {
     menu.classList.toggle("active")
 

@@ -20,7 +20,6 @@ import (
 type UserRegistrationRequestBody struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
-	Email    string `json:"email"`
 }
 
 //  _   _    _    _   _ ____  _     _____ ____  ____
@@ -68,7 +67,6 @@ func RegistrationResourceHandler(writer http.ResponseWriter, request *http.Reque
 			db,
 			requestBody.Username,
 			requestBody.Password,
-			requestBody.Email,
 		)
 	})
 

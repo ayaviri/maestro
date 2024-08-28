@@ -77,6 +77,7 @@ document.addEventListener("keyup", function(event) {
 
   if (
     event.key == "c" && 
+    !event.shiftKey &&
     document.activeElement &&
     document.activeElement.className == "search_result"
   ) {

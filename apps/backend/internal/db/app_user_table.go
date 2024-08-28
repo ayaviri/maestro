@@ -14,16 +14,15 @@ var err error
 type User struct {
 	Id       string
 	Username string
-	Email    string
 }
 
 func GetUserFromToken(db *sql.DB, token string) (User, error) {
 	query := fmt.Sprintf(
-		`select id, username, email from app_user where token = '%s'`, token,
+		`select id, username from app_user where token = '%s'`, token,
 	)
 	var row *sql.Row = db.QueryRow(query)
 	var user User
-	err = row.Scan(&user.Id, &user.Username, &user.Email)
+	err = row.Scan(&user.Id, &user.Username)
 
 	if err != nil {
 		return User{}, err
@@ -67,7 +66,6 @@ func CreateUser(
 	db *sql.DB,
 	username string,
 	password string,
-	email string,
 ) (string, error) {
 	var passwordHash string
 	passwordHash, err = internal.HashString(password)
@@ -78,9 +76,9 @@ func CreateUser(
 
 	userId := uuid.NewString()
 	statement := fmt.Sprintf(
-		`insert into app_user (id, username, password_hash, email)
-values('%s', '%s', '%s', '%s');`,
-		userId, username, passwordHash, email,
+		`insert into app_user (id, username, password_hash)
+values('%s', '%s', '%s');`,
+		userId, username, passwordHash,
 	)
 	_, err = db.Exec(statement)
 

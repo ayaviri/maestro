@@ -27,6 +27,54 @@ redirect.unauthorisedUsers()
 // |_____|___|____/ |_| |_____|_| \_|_____|_| \_\____/ 
 //                                                     
 
+const cartItemFocusParams = {
+  focusIndex: -1,
+  items: document.getElementsByClassName("cart_item")
+}
+const menu = document.getElementById("menu")
+
+document.addEventListener("keyup", function(event) {
+  if (
+    event.key == "j" && 
+    !menu.classList.contains("active") && 
+    cartItemFocusParams.items.length > 0
+  ) {
+    keybindings.focusNext(cartItemFocusParams)
+  }
+
+  if (
+    event.key == "k" && 
+    !menu.classList.contains("active") && 
+    cartItemFocusParams.items.length > 0
+  ) {
+    keybindings.focusPrevious(cartItemFocusParams)
+  }
+
+  if (
+    event.key == "o" && 
+    document.activeElement &&
+    document.activeElement.className == "cart_item"
+  ) {
+    const cartItemTitle = document.activeElement.getElementsByClassName("cart_item_title")[0]
+    cartItemTitle.click()
+  }
+
+  if (
+    event.key == "c" && 
+    !event.shiftKey && 
+    document.activeElement &&
+    document.activeElement.className == "cart_item"
+  ) {
+    const removeFromCartButton = document.activeElement.getElementsByClassName("remove_from_cart")[0]
+    removeFromCartButton.click()
+  }
+
+  if (event.key == "C") {
+    const checkoutButton = document.getElementById("checkout")
+    checkoutButton.click()
+  }
+})
+
 document.addEventListener("DOMContentLoaded", async function(event) {
   event.preventDefault()
   const cartItemsDiv = document.getElementById("cart_items")
@@ -94,6 +142,7 @@ document.getElementById("checkout").addEventListener("click", async function(eve
 function createCartItem(cartItem) {
   const container = document.createElement("div")
   container.setAttribute("class", "cart_item")
+  container.setAttribute("tabindex", "0")
   const title = `${decodeURIComponent(cartItem.title)} - 
 ${decodeURIComponent(cartItem.channel_title)}`
   container.appendChild(

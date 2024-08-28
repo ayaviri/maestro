@@ -1,7 +1,7 @@
 import * as utils from "./utils.js"
 
-export async function registerUser(email, username, password) {
-  const registrationForm = { email, username, password }
+export async function registerUser(username, password) {
+  const registrationForm = { username, password }
   const response = await fetch(
     `http://localhost:8000/register`,
     {
