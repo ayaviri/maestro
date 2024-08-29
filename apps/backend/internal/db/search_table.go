@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	xyoutube "maestro/internal/youtube"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,7 +15,7 @@ func CreateSearch(db *sql.DB, videoSearchQuery string, userId string) (string, e
 	searchId := uuid.NewString()
 	statement := fmt.Sprintf(
 		`insert into search (id, query, app_user_id) values('%s', '%s', '%s');`,
-		searchId, videoSearchQuery, userId,
+		searchId, strings.ReplaceAll(videoSearchQuery, "'", "''"), userId,
 	)
 	_, err = db.Exec(statement)
 
@@ -40,7 +41,7 @@ func GetRecentSearchResults(
         join search on search_result.search_id = search.id
         where search.query = '%s'
         and search.executed_at >= NOW() - interval '%d seconds';`,
-		videoSearchQuery, withinSeconds,
+		strings.ReplaceAll(videoSearchQuery, "'", "''"), withinSeconds,
 	)
 	var rows *sql.Rows
 	rows, err = db.Query(query)

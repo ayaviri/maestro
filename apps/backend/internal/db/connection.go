@@ -7,12 +7,9 @@ import (
 	"os"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/joho/godotenv"
 )
 
-func getDatabaseUrl() string {
-	err = godotenv.Load()
-	internal.HandleError(err, "Could not load environment variables")
+func getDatabaseServerUrl() string {
 	databaseUrl := fmt.Sprintf(
 		"postgresql://%s:%s@%s:%s/%s",
 		os.Getenv("POSTGRES_USER"),
@@ -26,8 +23,12 @@ func getDatabaseUrl() string {
 }
 
 func EstablishConnection(dbPtr **sql.DB) {
-	*dbPtr, err = sql.Open("pgx", getDatabaseUrl())
-	internal.HandleError(err, "Failed to connect to database")
+	var url string = getDatabaseServerUrl()
+	*dbPtr, err = sql.Open("pgx", url)
+	internal.HandleError(
+		err,
+		fmt.Sprintf("Failed to connect to database, given URL: %s\n", url),
+	)
 	err = (*dbPtr).Ping()
 	internal.HandleError(err, "Could not ping database")
 }

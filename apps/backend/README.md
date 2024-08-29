@@ -95,13 +95,15 @@ I'm new to Go, so documenting this for myself and others serves as a learning to
 
 ## Local Development
 
-There is a docker-compose.yaml file to prop up the PostgreSQL and RabbitMQ servers and a Makefile to prop up the core web server, the file server, and the worker process.
+There is a docker-compose.yaml file to prop up the PostgreSQL and RabbitMQ servers, and there is a Bash script to prop up the core web server, the file server, and the worker process.
+The docker-compose.yaml file expects certain environment variables, so there is a load_env.sh script for that purpose
 ```
+$ source load_env.sh .env.core
 $ docker-compose.yaml up -d
 $ # Each in a separate terminal
-$ make dev-server
-$ make dev-fs
-$ make dev-worker
+$ ./dev.sh core
+$ ./dev.sh worker
+$ ./dev.sh fs
 ```
 
 ### Database Migrations

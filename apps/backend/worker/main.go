@@ -3,11 +3,13 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"maestro/internal"
 	xamqp "maestro/internal/amqp"
 	xdb "maestro/internal/db"
 	xworker "maestro/internal/worker"
+	"os"
 	"path"
 	"strings"
 	"sync"
@@ -21,14 +23,16 @@ var checkoutRequestQueue amqp.Queue
 var checkoutCompletionQueue amqp.Queue
 var db *sql.DB
 var err error
+var CORE_SERVER_ADDRESS string
+var DOWNLOAD_DIRECTORY string
 
 func init() {
 	var wg sync.WaitGroup
-	wg.Add(2)
+	wg.Add(3)
 
 	go func() {
 		timer.WithTimer(
-			"initialising connection to rabbitmq server, declaring necessary queues",
+			"initialising connection to message broker server, declaring necessary queues",
 			func() {
 				defer wg.Done()
 				xamqp.SetupQueues(
@@ -44,6 +48,18 @@ func init() {
 		timer.WithTimer("initialising long-lived database connection", func() {
 			defer wg.Done()
 			xdb.EstablishConnection(&db)
+		})
+	}()
+
+	go func() {
+		timer.WithTimer("reading from environment variables", func() {
+			defer wg.Done()
+			CORE_SERVER_ADDRESS = HealthCheckCoreServer()
+			DOWNLOAD_DIRECTORY = os.Getenv("DOWNLOAD_DIRECTORY")
+
+			if DOWNLOAD_DIRECTORY == "" {
+				log.Fatalf("Read empty download directory")
+			}
 		})
 	}()
 
@@ -104,11 +120,8 @@ func main() {
 			var downloadUrls []string
 
 			timer.WithTimer("downloading cart contents", func() {
-				// TODO: The download directory needs to be pulled into
-				// some sort of environment file that the file server
-				// can read from as well
 				var cartDownloadDirectory string = path.Join(
-					"downloads", requestMessage.JobId,
+					DOWNLOAD_DIRECTORY, requestMessage.JobId,
 				)
 				var filePaths []string
 				filePaths, err = DownloadCart(
@@ -116,16 +129,17 @@ func main() {
 					requestMessage.UserId,
 					cartDownloadDirectory,
 				)
+				xworker.RejectOnError(err, "Failed to download cart contents", d)
 				downloadUrls = make([]string, len(filePaths))
 
 				for index, filePath := range filePaths {
-					// TODO: The address to the file server should also
-					// be an environment variable
-					stripped := strings.TrimPrefix(filePath, "downloads/")
-					downloadUrls[index] = "http://localhost:8000/download/" + stripped
+					stripped := strings.TrimPrefix(filePath, DOWNLOAD_DIRECTORY+"/")
+					downloadUrls[index] = fmt.Sprintf(
+						"%s/download/%s",
+						CORE_SERVER_ADDRESS,
+						stripped,
+					)
 				}
-
-				xworker.RejectOnError(err, "Failed to download cart contents", d)
 			})
 
 			// TODO: Update this to include the network location of the file server

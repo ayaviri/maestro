@@ -4,7 +4,7 @@ services:
     hostname: maestro-rabbit
     restart: always
     ports:
-      - 5672:5672
+      - ${RABBIT_PORT}:${RABBIT_PORT}
   postgres:
     image: postgres:latest
     restart: always

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"log"
 	"maestro/internal"
 	xamqp "maestro/internal/amqp"
 	xdb "maestro/internal/db"
@@ -24,17 +25,17 @@ var db *sql.DB
 var messageQueueConnection *amqp.Connection
 var checkoutRequestQueue amqp.Queue
 var checkoutCompletionQueue amqp.Queue
+var FS_ADDRESS string
 var err error
 
 func init() {
 	var wg sync.WaitGroup
-	wg.Add(3)
+	wg.Add(4)
 
 	go func() {
 		timer.WithTimer("initialising youtube client", func() {
 			defer wg.Done()
 			ctx := context.Background()
-			// TODO: Load from a dotenv file
 			var apiKey string = os.Getenv("GCS_API_KEY")
 			youtubeService, err = youtube.NewService(ctx, option.WithAPIKey(apiKey))
 			internal.HandleError(err, "Could not initialise Youtube client")
@@ -61,6 +62,17 @@ func init() {
 				)
 			},
 		)
+	}()
+
+	go func() {
+		timer.WithTimer("reading from environment variables", func() {
+			defer wg.Done()
+			FS_ADDRESS = os.Getenv("FS_ADDRESS")
+
+			if FS_ADDRESS == "" {
+				log.Fatalf("Read empty file server address")
+			}
+		})
 	}()
 
 	wg.Wait()
@@ -128,7 +140,7 @@ func initialiseServer() {
 		"/download/",
 		loggingHandler(
 			c.Handler(
-				http.HandlerFunc(DownloadResourceHandler),
+				authMiddlewareFactory.New(http.HandlerFunc(DownloadResourceHandler)),
 			),
 		),
 	)

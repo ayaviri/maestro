@@ -16,8 +16,7 @@ func DownloadResourceHandler(writer http.ResponseWriter, request *http.Request) 
 	// NOTE: There will be no check of whether the user making this request
 	// is downloading their own cart items here
 	var filePath string = strings.TrimPrefix(request.URL.Path, "/download/")
-	// TODO: Make the file server host name and port an environment variable
-	response, err := httpClient.Get("http://localhost:8001/" + filePath)
+	response, err := httpClient.Get(FS_ADDRESS + "/" + filePath)
 
 	if err != nil {
 		http.Error(

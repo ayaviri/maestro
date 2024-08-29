@@ -110,17 +110,18 @@ export async function checkout() {
   return response
 }
 
+export function openPersistentConnectionForDownloadStatus(jobId) {
+  return new EventSource(`http://localhost:8000/job/${jobId}`)
+}
+
 // Downloads all songs in the message body, removing the successful downloads
 // from the cart
 export async function downloadSongsUponCompletion(event, connection, errorCallback) {
   const message = JSON.parse(event.data)
   connection.close()
-  console.log(message.download_urls)
 
   try {
-    const downloadPromises = await Promise.all(
-      message.download_urls.map((url) => _downloadSong(url))
-    )
+    await Promise.all(message.download_urls.map((url) => _downloadSong(url)))
   } catch (error) {
     errorCallback()
   }
@@ -142,7 +143,6 @@ async function _downloadSong(url) {
   }
 
   const blobUrl = window.URL.createObjectURL(await response.blob())
-  console.log(blobUrl)
   const downloadButton = document.createElement("a")
   downloadButton.setAttribute("id", blobUrl)
   downloadButton.href = blobUrl
@@ -157,7 +157,6 @@ function _getFilenameFromResponseHeader(response) {
   const contentDispositionHeader = response.headers.get("Content-Disposition")
   // "attachment; filename='file.ext'" => "file.ext"
   const filename = contentDispositionHeader.split(";")[1].trim().match("filename='(.*)'")[1]
-  console.log(filename)
 
   return filename
 }

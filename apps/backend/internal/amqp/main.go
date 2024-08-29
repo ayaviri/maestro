@@ -1,12 +1,26 @@
 package amqp
 
 import (
+	"fmt"
 	"maestro/internal"
+	"os"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 var err error
+
+func getBrokerServerUrl() string {
+	brokerUrl := fmt.Sprintf(
+		"amqp://%s:%s@%s:%s",
+		os.Getenv("RABBIT_USER"),
+		os.Getenv("RABBIT_PASSWORD"),
+		os.Getenv("RABBIT_HOST"),
+		os.Getenv("RABBIT_PORT"),
+	)
+
+	return brokerUrl
+}
 
 // Establishes a connection to the rabbitmq server and declares the
 // queues for cart checkout request and completion
@@ -18,8 +32,15 @@ func SetupQueues(
 	// I didn't want to encapsulate these two function arguments, so I decided
 	// to pass mutable pointers instead. Womp womp
 
-	*connectionPtr, err = amqp.Dial("amqp://guest:guest@localhost:5672/")
-	internal.HandleError(err, "Could not connect to the Rabbit message broker")
+	var url string = getBrokerServerUrl()
+	*connectionPtr, err = amqp.Dial(url)
+	internal.HandleError(
+		err,
+		fmt.Sprintf(
+			"Could not connect to the Rabbit message broker, given URL: %s",
+			url,
+		),
+	)
 	var channel *amqp.Channel
 	channel, err = (*connectionPtr).Channel()
 	internal.HandleError(

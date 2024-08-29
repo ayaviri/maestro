@@ -127,13 +127,13 @@ document.getElementById("checkout").addEventListener("click", async function(eve
   }
 
   const jobId = (await response.json()).job_id
-  const eventSource = new EventSource(`http://localhost:8000/job/${jobId}`)
+  const connection = api.openPersistentConnectionForDownloadStatus(jobId)
   const errorCallback = () => { 
     errorElement.textContent = "a song could not be downloaded :("
   }
-  eventSource.addEventListener(
+  connection.addEventListener(
     "urls", async function(event) { 
-      await api.downloadSongsUponCompletion(event, eventSource, errorCallback) 
+      await api.downloadSongsUponCompletion(event, connection, errorCallback) 
       checkoutButton.disabled = false
     }
   )

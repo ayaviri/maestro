@@ -93,19 +93,19 @@ document.getElementById("search").addEventListener("submit", async function(even
   const errorElement = document.getElementById("error")
   errorElement.textContent = ""
   const query = document.getElementById("query").value
-
   const promises = [api.searchVideos(query), api.getCartItems()]
   let searchResponse, cartItemsResponse;
   [searchResponse, cartItemsResponse] = await Promise.all(promises)
 
-  // if (!searchResponse.ok) {
-  //   const errorElement = document.getElementsByClassName("error")[0]
-  //   errorElement.textContent = `:( (${response.status})`
-  //   return
-  // }
+  if (!searchResponse.ok) {
+    errorElement.textContent = `search failed :(`
+    return
+  }
 
-  // if (!cartItemsResponse.ok) {
-  // }
+  if (!cartItemsResponse.ok) {
+    errorElement.textContent = `could not get items from cart :(`
+    return
+  }
 
   const searchResults = (await searchResponse.json()).videos
   const cartItems = (await cartItemsResponse.json()).cart_items

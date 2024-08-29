@@ -9,4 +9,7 @@
 
 ## Local Development
 
-To start the web server, run `make dev-web`
+```
+$ chmod +x dev.sh load_env.sh
+$ ./dev.sh
+```

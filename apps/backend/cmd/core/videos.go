@@ -58,7 +58,6 @@ func VideosResourceHandler(writer http.ResponseWriter, request *http.Request) {
 	// TODO: Introduce pagination parameters
 	videos := make([]xyoutube.Video, 0)
 
-	// TODO: IMPLEMENT !!!
 	timer.WithTimer("checking for recent searches matching query", func() {
 		videos, err = xdb.GetRecentSearchResults(db, videoSearchQuery, 15*time.Minute)
 	})

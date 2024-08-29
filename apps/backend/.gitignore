@@ -1,4 +1,2 @@
-.env
-db/maestro.db
 /core
 .DS_Store
