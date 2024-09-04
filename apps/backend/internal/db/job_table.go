@@ -11,19 +11,23 @@ const StatusCreated = "CREATED"
 const StatusReceived = "RECEIVED"
 const StatusFinished = "FINISHED"
 
-// Creates a new row in the job table and returns its ID
-func CreateNewJob(db *sql.DB) (string, error) {
-	jobId := uuid.NewString()
+func CreateNewJobWithId(db *sql.DB, userId string, jobId string) error {
 	statement := fmt.Sprintf(
-		`insert into job (id, status) values('%s', '%s');`, jobId, StatusCreated,
+		`insert into job (id, app_user_id, status) values('%s', '%s', '%s');`,
+		jobId,
+		userId,
+		StatusCreated,
 	)
 	_, err = db.Exec(statement)
 
-	if err != nil {
-		return "", err
-	}
+	return err
+}
 
-	return jobId, nil
+func CreateNewJob(db *sql.DB, userId string) (string, error) {
+	jobId := uuid.NewString()
+	err = CreateNewJobWithId(db, userId, jobId)
+
+	return jobId, err
 }
 
 func UpdateJobStatus(db *sql.DB, jobId string, status string) error {
@@ -42,4 +46,13 @@ func AddJobPayload(db *sql.DB, jobId string, payload string) error {
 	_, err = db.Exec(statement)
 
 	return err
+}
+
+func GetJobPayload(db *sql.DB, jobId string) (string, error) {
+	var responsePayload string
+	query := fmt.Sprintf(`select response_payload from job where id = '%s'`, jobId)
+	var row *sql.Row = db.QueryRow(query)
+	err = row.Scan(&responsePayload)
+
+	return responsePayload, err
 }

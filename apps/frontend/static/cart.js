@@ -128,12 +128,18 @@ document.getElementById("checkout").addEventListener("click", async function(eve
 
   const jobId = (await response.json()).job_id
   const connection = api.openPersistentConnectionForDownloadStatus(jobId)
-  const errorCallback = () => { 
-    errorElement.textContent = "a song could not be downloaded :("
-  }
   connection.addEventListener(
     "urls", async function(event) { 
-      await api.downloadSongsUponCompletion(event, connection, errorCallback) 
+      const message = JSON.parse(event.data)
+      connection.close()
+
+      try {
+        response = await api.downloadCart(message.download_url)
+      } catch (error) {
+        console.log(error)
+        errorElement.textContent = "cart download failed :("
+      }
+
       checkoutButton.disabled = false
     }
   )

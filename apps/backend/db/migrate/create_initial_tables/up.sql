@@ -57,7 +57,13 @@ create table if not exists search_result (
 );
 
 create table if not exists job (
-    id text primary key, -- uuid string status text not null,
+    id text primary key, -- uuid string
+    status text not null, 
+    app_user_id text not null,
     response_payload text, -- a json string
-    created_at timestamp default current_timestamp
+    created_at timestamp default current_timestamp,
+    foreign key (app_user_id) references app_user(id)
 );
+
+create unique index if not exists job_id on job(id);
+create index if not exists job_app_user_id on job(app_user_id);

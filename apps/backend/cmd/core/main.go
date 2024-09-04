@@ -19,7 +19,6 @@ import (
 	"google.golang.org/api/youtube/v3"
 )
 
-var httpClient http.Client
 var youtubeService *youtube.Service
 var db *sql.DB
 var messageQueueConnection *amqp.Connection

@@ -1,6 +1,7 @@
 package http
 
 import (
+	"maestro/internal"
 	"net/http"
 	"time"
 )
@@ -15,7 +16,8 @@ func Heartbeat(
 	d time.Duration,
 	writer http.ResponseWriter,
 	flusher http.Flusher,
-	terminationChannel chan int,
+	// terminationChannel chan int,
+	terminationChannel *internal.SafeClosureChannel,
 ) {
 	var heartbeat *time.Ticker = time.NewTicker(1 * time.Second)
 	defer heartbeat.Stop()
@@ -25,7 +27,7 @@ func Heartbeat(
 		case <-heartbeat.C:
 			writer.Write([]byte("event: heartbeat\n\n"))
 			flusher.Flush()
-		case <-terminationChannel:
+		case <-terminationChannel.C:
 			return
 		}
 	}

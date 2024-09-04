@@ -3,15 +3,12 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"log"
 	"maestro/internal"
 	xamqp "maestro/internal/amqp"
 	xdb "maestro/internal/db"
 	xworker "maestro/internal/worker"
 	"os"
-	"path"
-	"strings"
 	"sync"
 
 	"github.com/ayaviri/goutils/timer"
@@ -24,6 +21,7 @@ var checkoutCompletionQueue amqp.Queue
 var db *sql.DB
 var err error
 var CORE_SERVER_ADDRESS string
+var FS_ADDRESS string
 var DOWNLOAD_DIRECTORY string
 
 func init() {
@@ -54,7 +52,18 @@ func init() {
 	go func() {
 		timer.WithTimer("reading from environment variables", func() {
 			defer wg.Done()
-			CORE_SERVER_ADDRESS = HealthCheckCoreServer()
+			CORE_SERVER_ADDRESS = os.Getenv("CORE_SERVER_ADDRESS")
+
+			if CORE_SERVER_ADDRESS == "" {
+				log.Fatalf("Read empty core web server address")
+			}
+
+			FS_ADDRESS = os.Getenv("FS_ADDRESS")
+
+			if FS_ADDRESS == "" {
+				log.Fatalf("Read empty file server address")
+			}
+
 			DOWNLOAD_DIRECTORY = os.Getenv("DOWNLOAD_DIRECTORY")
 
 			if DOWNLOAD_DIRECTORY == "" {
@@ -110,58 +119,60 @@ func main() {
 			// TODO: We're going to have an issue here if we have other kinds of jobs
 			// to pull out of band. We'll need some sort of controller
 			var requestMessage xworker.CheckoutRequestMessage
-			err = json.Unmarshal(d.Body, &requestMessage)
-			xworker.RejectOnError(
+
+			timer.WithTimer("unmarshalling message from JSON", func() {
+				err = json.Unmarshal(d.Body, &requestMessage)
+			})
+
+			xworker.RejectAndExitOnError(
 				err,
 				"Failed to unmarshal cart checkout request message JSON",
 				d,
 			)
 
+			var wg sync.WaitGroup
+			wg.Add(2)
+
 			var downloadUrls []string
 
-			timer.WithTimer("downloading cart contents", func() {
-				var cartDownloadDirectory string = path.Join(
-					DOWNLOAD_DIRECTORY, requestMessage.JobId,
-				)
-				var filePaths []string
-				filePaths, err = DownloadCart(
-					db,
-					requestMessage.UserId,
-					cartDownloadDirectory,
-				)
-				xworker.RejectOnError(err, "Failed to download cart contents", d)
-				downloadUrls = make([]string, len(filePaths))
-
-				for index, filePath := range filePaths {
-					stripped := strings.TrimPrefix(filePath, DOWNLOAD_DIRECTORY+"/")
-					downloadUrls[index] = fmt.Sprintf(
-						"%s/download/%s",
-						CORE_SERVER_ADDRESS,
-						stripped,
+			go func() {
+				timer.WithTimer("downloading cart contents", func() {
+					defer wg.Done()
+					downloadUrls, err = DownloadCart(db, requestMessage)
+					xworker.RejectAndExitOnError(
+						err,
+						"Failed to download cart contents",
+						d,
 					)
-				}
-			})
+				})
+			}()
 
-			// TODO: Update this to include the network location of the file server
-			var completionMessage []byte
+			go func() {
+				timer.WithTimer("writing job to DB", func() {
+					defer wg.Done()
+					// A worker owned, not a DB-owned utility, since all other
+					// DB-owned utilities _create_ their own ID, but the ID
+					// already exists here
+					err = CreateNewJob(db, requestMessage.JobId, requestMessage.UserId)
+					xworker.RejectAndExitOnError(err, "Failed to write job to DB", d)
+				})
+			}()
 
-			timer.WithTimer("constructing checkout completion message", func() {
-				completionMessage, err = json.Marshal(
-					xworker.CheckoutCompletionMessage{
-						JobId:        requestMessage.JobId,
-						DownloadUrls: downloadUrls,
-					},
-				)
-				xworker.RejectOnError(
-					err,
-					"Failed to marhsal checkout completion message to JSON",
-					d,
-				)
-			})
+			wg.Wait()
+			wg.Add(2)
 
-			timer.WithTimer(
-				"posting checkout completion message back to core web server",
-				func() {
+			go func() {
+				timer.WithTimer("publishing checkout completion message", func() {
+					defer wg.Done()
+					var clientMessage []byte
+					clientMessage, _ = json.Marshal(
+						xworker.CheckoutCompletionClientMessage{
+							JobId: requestMessage.JobId,
+							DownloadUrl: ConstructCoreServerDownloadUrlFromJob(
+								requestMessage.JobId,
+							),
+						},
+					)
 					err = channel.Publish(
 						"",
 						checkoutCompletionQueue.Name,
@@ -170,17 +181,36 @@ func main() {
 						amqp.Publishing{
 							DeliveryMode: amqp.Persistent,
 							ContentType:  "text/plain",
-							Body:         completionMessage,
+							Body:         clientMessage,
 						},
 					)
-					xworker.RejectOnError(
+					xworker.RejectAndExitOnError(
 						err,
-						"Failed to notify core web server of checkout completion",
+						"Failed to publish checkout completion message to message queue",
 						d,
 					)
-				},
-			)
+				})
+			}()
 
+			go func() {
+				timer.WithTimer("writing job completion to DB", func() {
+					defer wg.Done()
+					var serverResponse []byte
+					serverResponse, _ = json.Marshal(
+						xworker.CheckoutCompletionResponse{
+							DownloadUrls: downloadUrls,
+						},
+					)
+					err = WriteJobCompletion(
+						db,
+						requestMessage.JobId,
+						string(serverResponse),
+					)
+					xworker.RejectAndExitOnError(err, "Failed to update job in DB", d)
+				})
+			}()
+
+			wg.Wait()
 			d.Ack(false)
 		}
 	}()

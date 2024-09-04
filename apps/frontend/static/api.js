@@ -114,22 +114,9 @@ export function openPersistentConnectionForDownloadStatus(jobId) {
   return new EventSource(`http://localhost:8000/job/${jobId}`)
 }
 
-// Downloads all songs in the message body, removing the successful downloads
-// from the cart
-export async function downloadSongsUponCompletion(event, connection, errorCallback) {
-  const message = JSON.parse(event.data)
-  connection.close()
-
-  try {
-    await Promise.all(message.download_urls.map((url) => _downloadSong(url)))
-  } catch (error) {
-    errorCallback()
-  }
-}
-
 // Requests the given URL and downloads the response body as a blob
 // using the filename in the Content-Disposition header
-async function _downloadSong(url) {
+export async function downloadCart(url) {
   const bearerToken = utils.getBearerToken()
   const response = await fetch(url, {
     method: "GET",
@@ -138,19 +125,20 @@ async function _downloadSong(url) {
     }
   })
 
+  console.log("after download request")
+
   if (!response.ok) {
     throw new Error("file not found")
   }
 
   const blobUrl = window.URL.createObjectURL(await response.blob())
   const downloadButton = document.createElement("a")
-  downloadButton.setAttribute("id", blobUrl)
+  downloadButton.id = blobUrl
   downloadButton.href = blobUrl
   downloadButton.download = _getFilenameFromResponseHeader(response)
   document.body.appendChild(downloadButton)
   downloadButton.click()
   downloadButton.remove()
-  window.URL.revokeObjectURL(blobUrl)
 }
 
 function _getFilenameFromResponseHeader(response) {

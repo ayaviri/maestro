@@ -5,11 +5,23 @@ type CheckoutRequestMessage struct {
 	JobId  string `json:"job_id"`
 }
 
-// TODO: The inclusion of the user ID this cart checkout is for
-// paired with JWT instead of UUID bearer token for token integrity
-// would be a nice touch to ensure no man-in-the-middle attack occurs
-type CheckoutCompletionMessage struct {
-	// The URLs to download each song from the cart from the worker's file server
-	JobId        string   `json:"job_id"`
+// The message to be sent to the client through the SSE events connection
+// between the client and the core web server's /job/ endpoint
+type CheckoutCompletionClientMessage struct {
+	// The ID of the job that downloaded this cart. Used by the core server
+	// to ensure it has picked up the correct checkout completion message
+	// from the message queue
+	JobId string `json:"job_id"`
+	// The URL to download the cart contents (as a single zip file)
+	// from the core web server
+	DownloadUrl string `json:"download_url"`
+}
+
+// The payload to be written into the job table of the DB for
+// the core web server to reference when downloading the cart items
+// from the worker's associated file server
+type CheckoutCompletionResponse struct {
+	// The list of URLs corresponding to each of the items in from the
+	// cart on the file server
 	DownloadUrls []string `json:"download_urls"`
 }

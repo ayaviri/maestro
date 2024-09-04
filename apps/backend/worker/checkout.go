@@ -5,24 +5,27 @@ import (
 	"errors"
 	"fmt"
 	xdb "maestro/internal/db"
+	xworker "maestro/internal/worker"
 	xyoutube "maestro/internal/youtube"
 	xytdlp "maestro/internal/ytdlp"
+	"path"
+	"strings"
 
 	"github.com/ayaviri/goutils/timer"
 )
 
-// Reads the cart for the given user and downloads in into the given
-// directory (path from project root). See purpose statement of
-// xytdlp.DownloadVideos for return value
+// 1) Reads the cart for the given user (contained in the message)
+// 2) Downloads the cart items to disk
+// 3) Returns a list of URLs, in which each one can download a
+// an item from the cart from the file server in the worker's environment
 func DownloadCart(
 	db *sql.DB,
-	userId string,
-	downloadDirectory string,
+	message xworker.CheckoutRequestMessage,
 ) ([]string, error) {
 	var videos []xyoutube.Video
 
-	timer.WithTimer("getting cart contents", func() {
-		videos, err = xdb.GetItemsFromCart(db, userId)
+	timer.WithTimer("getting items from user's cart", func() {
+		videos, err = xdb.GetItemsFromCart(db, message.UserId)
 	})
 
 	if err != nil {
@@ -36,10 +39,15 @@ func DownloadCart(
 		return []string{}, errors.New("Cart is empty")
 	}
 
-	var fileDownloadPaths []string
+	// Paths from the root of the repo to the downloaded files on the worker's
+	// disk
+	var filePaths []string
 
 	timer.WithTimer("downloading items from cart using yt-dlp", func() {
-		fileDownloadPaths, err = xytdlp.DownloadVideos(videos, downloadDirectory)
+		var cartDownloadDirectory string = path.Join(
+			DOWNLOAD_DIRECTORY, message.JobId,
+		)
+		filePaths, err = xytdlp.DownloadVideos(videos, cartDownloadDirectory)
 	})
 
 	if err != nil {
@@ -49,5 +57,56 @@ func DownloadCart(
 		)
 	}
 
-	return fileDownloadPaths, nil
+	var downloadUrls []string = constructFileServerDownloadUrlsFromFilePaths(filePaths)
+
+	return downloadUrls, nil
+}
+
+// Constructs a download URL from the core server of the cart items downloaded
+// through the given job (eg. jobId1234 => CORE_SERVER_ADDRESS + /download/jobId1234)
+func ConstructCoreServerDownloadUrlFromJob(jobId string) string {
+	return CORE_SERVER_ADDRESS + "/download/" + jobId
+}
+
+// Receives a list of file paths relative to the root of the project
+// and converts it to a list of URLs to the each file in the file server
+// by trimming the download directory path (this is specific to the
+// file server implementation) (eg. downloads/file.mp3 => FS_ADDRESS + /file.mp3)
+func constructFileServerDownloadUrlsFromFilePaths(filePaths []string) []string {
+	downloadUrls := make([]string, len(filePaths))
+
+	for index, filePath := range filePaths {
+		strippedFilePath := strings.TrimPrefix(filePath, DOWNLOAD_DIRECTORY+"/")
+		downloadUrls[index] = FS_ADDRESS + "/" + strippedFilePath
+	}
+
+	return downloadUrls
+}
+
+// 1) Creates a new job in the job table with the given ID for the given user
+// 2) Updates its status to started
+func CreateNewJob(db *sql.DB, jobId string, userId string) error {
+	err = xdb.CreateNewJobWithId(db, userId, jobId)
+
+	if err != nil {
+		return err
+	}
+
+	err = xdb.UpdateJobStatus(db, jobId, xdb.StatusCreated)
+
+	return err
+}
+
+// 1) Writes the given response payload for the given job in the job table
+// 2) Updates its status to completed
+func WriteJobCompletion(db *sql.DB, jobId string, responsePayload string) error {
+	err = xdb.AddJobPayload(db, jobId, responsePayload)
+
+	if err != nil {
+		return err
+	}
+
+	err = xdb.UpdateJobStatus(db, jobId, xdb.StatusFinished)
+
+	return err
 }

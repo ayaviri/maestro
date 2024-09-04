@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"maestro/internal"
 	xhttp "maestro/internal/http"
 	xworker "maestro/internal/worker"
 
@@ -95,7 +96,8 @@ func JobResourceHandler(writer http.ResponseWriter, request *http.Request) {
 	// Used by the message stream goroutine to signal to the heartbeat goroutine
 	// that it should terminate. Heartbeat goroutine will terminate when this
 	// channel is closed
-	heartbeatTerminationChannel := make(chan int)
+	// heartbeatTerminationChannel := make(chan int)
+	heartbeatTerminationChannel := internal.NewSafeClosureChannel()
 	go xhttp.Heartbeat(1*time.Second, writer, flusher, heartbeatTerminationChannel)
 	go awaitCheckoutCompletionMessage(
 		messages,
@@ -120,7 +122,8 @@ func awaitCheckoutCompletionMessage(
 	jobId string,
 	writer http.ResponseWriter,
 	flusher http.Flusher,
-	terminationChannel chan int,
+	// terminationChannel chan int,
+	terminationChannel *internal.SafeClosureChannel,
 	clientDisconnected <-chan struct{},
 ) {
 	var delivery amqp.Delivery
@@ -135,7 +138,8 @@ func awaitCheckoutCompletionMessage(
 					"Channel of communication with RabbitMQ server severed prematurely",
 					http.StatusInternalServerError,
 				)
-				close(terminationChannel)
+				// close(terminationChannel)
+				terminationChannel.SafeClose()
 				return
 			}
 
@@ -151,6 +155,8 @@ func awaitCheckoutCompletionMessage(
 				delivery.Reject(true)
 			}
 		case <-clientDisconnected:
+			// close(terminationChannel)
+			terminationChannel.SafeClose()
 			return
 		}
 	}
@@ -162,9 +168,10 @@ func processCheckoutCompletionMessage(
 	jobId string,
 	writer http.ResponseWriter,
 	flusher http.Flusher,
-	terminationChannel chan int,
+	// terminationChannel chan int,
+	terminationChannel *internal.SafeClosureChannel,
 ) error {
-	var completionMessage xworker.CheckoutCompletionMessage
+	var completionMessage xworker.CheckoutCompletionClientMessage
 	err = json.Unmarshal(delivery.Body, &completionMessage)
 
 	if err != nil {
@@ -178,7 +185,8 @@ func processCheckoutCompletionMessage(
 		return errors.New("Picked up incorrect cart checkout completion message")
 	}
 
-	close(terminationChannel)
+	// close(terminationChannel)
+	terminationChannel.SafeClose()
 	io.WriteString(writer, fmt.Sprintf("event: urls\ndata: %s\n\n", delivery.Body))
 	flusher.Flush()
 	delivery.Ack(false)
