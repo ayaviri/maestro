@@ -79,15 +79,33 @@ func SearchVideosByQuery(
 		return []Video{}, err
 	}
 
-	var videoResults []*youtube.Video = videosResponse.Items
+	videoResults := make(map[string]*youtube.Video, len(searchResults))
+
+	timer.WithTimer(
+		"constructing 'set' of videos by ID so as to check for presence first",
+		func() {
+			// _video_ is of type *youtube.Video
+			for _, video := range videosResponse.Items {
+				videoResults[video.Id] = video
+			}
+		},
+	)
+
 	videos := []Video{}
 
 	timer.WithTimer(
 		"mapping search and video results to desired schema, filtering out Shorts",
 		func() {
 			for index, searchResult := range searchResults {
+				var video *youtube.Video
+				var ok bool
+				video, ok = videoResults[searchResult.Id.VideoId]
+
+				if !ok {
+					continue
+				}
+
 				var searchSnippet *youtube.SearchResultSnippet = searchResult.Snippet
-				var video *youtube.Video = videoResults[index]
 				var d *duration.Duration
 				d, err = duration.Parse(video.ContentDetails.Duration)
 

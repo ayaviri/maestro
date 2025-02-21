@@ -9,10 +9,6 @@ import (
 var err error
 
 // Downloads the given list of videos into the given download directory.
-// Returns a list of the written file paths (includes given download directory
-// and file name)
-// For example, if given "foo" as the download directory, list might contain
-// [foo/bar.mp3 foo/baz.mp3]
 func DownloadVideos(v []xyoutube.Video, downloadDirectory string) ([]string, error) {
 	videoLinks := make([]string, 0)
 
@@ -25,6 +21,8 @@ func DownloadVideos(v []xyoutube.Video, downloadDirectory string) ([]string, err
 	var args []string = append(
 		[]string{
 			"-x",
+			"--audio-format",
+			"mp3",
 			"-P",
 			downloadDirectory,
 			"-o",
@@ -33,8 +31,8 @@ func DownloadVideos(v []xyoutube.Video, downloadDirectory string) ([]string, err
 			"--no-simulate",
 			"--no-warnings",
 			"--restrict-filenames",
-			"--exec",
-			"echo %(filename)q",
+			"--print",
+			"after_move:filepath",
 		},
 		videoLinks...,
 	)
@@ -47,7 +45,7 @@ func DownloadVideos(v []xyoutube.Video, downloadDirectory string) ([]string, err
 	}
 
 	outString := strings.TrimSuffix(string(out), "\n")
-	var fileNames []string = strings.Split(outString, "\n")
+	var absoluteFilePaths []string = strings.Split(outString, "\n")
 
-	return fileNames, err
+	return absoluteFilePaths, err
 }

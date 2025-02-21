@@ -95,7 +95,12 @@ document.getElementById("search").addEventListener("submit", async function(even
   const query = document.getElementById("query").value
   const promises = [api.searchVideos(query), api.getCartItems()]
   let searchResponse, cartItemsResponse;
-  [searchResponse, cartItemsResponse] = await Promise.all(promises)
+
+  try {
+    [searchResponse, cartItemsResponse] = await Promise.all(promises)
+  } catch (e) {
+    errorElement.textContent = "connection dropped :("
+  }
 
   if (!searchResponse.ok) {
     errorElement.textContent = `search failed :(`

@@ -123,7 +123,7 @@ To execute a migration, run the following
 # Usage:
 # go run cmd/migrate/main.go [migration_name] [up/down]
 # Example usage:
-$ go run db/migrate.go create_user_table up
+$ go run cmd/migrate/main.go create_user_table up
 ```
 
  **IMPORTANT: Ensure that both up/down scripts are idempotent. The go script that executes these does NOT rollback changes if left in an intermediate state**

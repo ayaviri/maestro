@@ -39,15 +39,13 @@ func DownloadCart(
 		return []string{}, errors.New("Cart is empty")
 	}
 
-	// Paths from the root of the repo to the downloaded files on the worker's
-	// disk
-	var filePaths []string
+	var absoluteFilePaths []string
 
 	timer.WithTimer("downloading items from cart using yt-dlp", func() {
 		var cartDownloadDirectory string = path.Join(
 			DOWNLOAD_DIRECTORY, message.JobId,
 		)
-		filePaths, err = xytdlp.DownloadVideos(videos, cartDownloadDirectory)
+		absoluteFilePaths, err = xytdlp.DownloadVideos(videos, cartDownloadDirectory)
 	})
 
 	if err != nil {
@@ -57,7 +55,7 @@ func DownloadCart(
 		)
 	}
 
-	var downloadUrls []string = constructFileServerDownloadUrlsFromFilePaths(filePaths)
+	var downloadUrls []string = constructFileServerDownloadUrlsFromFilePaths(absoluteFilePaths)
 
 	return downloadUrls, nil
 }
@@ -68,15 +66,19 @@ func ConstructCoreServerDownloadUrlFromJob(jobId string) string {
 	return CORE_SERVER_ADDRESS + "/download/" + jobId
 }
 
-// Receives a list of file paths relative to the root of the project
+// Receives a list of absolute file paths
 // and converts it to a list of URLs to the each file in the file server
 // by trimming the download directory path (this is specific to the
-// file server implementation) (eg. downloads/file.mp3 => FS_ADDRESS + /file.mp3)
+// file server implementation) (eg. /User/foo/project/downloads/job/file.mp3 => FS_ADDRESS + /file.mp3)
 func constructFileServerDownloadUrlsFromFilePaths(filePaths []string) []string {
 	downloadUrls := make([]string, len(filePaths))
 
 	for index, filePath := range filePaths {
-		strippedFilePath := strings.TrimPrefix(filePath, DOWNLOAD_DIRECTORY+"/")
+		startingIndex := strings.Index(filePath, DOWNLOAD_DIRECTORY)
+		strippedFilePath := strings.TrimPrefix(
+			filePath[startingIndex:],
+			DOWNLOAD_DIRECTORY+"/",
+		)
 		downloadUrls[index] = FS_ADDRESS + "/" + strippedFilePath
 	}
 
